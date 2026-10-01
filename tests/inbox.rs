@@ -1,4 +1,6 @@
 //! Real OpenMLS and scoped Keys vectors. Test issuers are not production G3/G2.
+#[path = "support/dropped_facade_candidates.rs"]
+mod dropped_facade_candidates;
 mod support;
 use cdlv::Status;
 use ckmg::{Binding, KeyHandle, Lineage};
