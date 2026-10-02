@@ -204,6 +204,20 @@ fn established_message_uses_real_owners_through_the_facade() {
         assert_eq!(empty.delivery_status(&[0; 32]), None);
         assert_eq!(empty.relation("bob").unwrap().state, ctcs::State::Unknown);
         assert!(empty.relation("alice").is_err());
+        assert!(empty.snapshot("alice").is_err());
+        let snapshot = empty.snapshot("bob").unwrap();
+        assert_eq!(snapshot.relation.state, ctcs::State::Unknown);
+        let encoded = serde_json::to_vec(&snapshot).unwrap();
+        let decoded: cnbx::ConversationView = serde_json::from_slice(&encoded).unwrap();
+        assert!(decoded.history.is_empty());
+        let schema = schemars::schema_for!(cnbx::ConversationView);
+        assert!(
+            serde_json::to_value(schema)
+                .unwrap()
+                .to_string()
+                .contains("history")
+        );
+        assert!(empty.retry(&[0; 32], &mut directory).await.is_err());
         assert!(
             Inbox::new(Binding::new("foreign", "alice").unwrap())
                 .view(SLOT, &astore)
@@ -220,36 +234,64 @@ fn established_message_uses_real_owners_through_the_facade() {
         b.establish("alice", &mut bstore).await;
         // Real owner-authorized direct setup. Production Wave release is still
         // unavailable; this signed fixture does not claim G2/G3/G5 acceptance.
-        let at = Threads::load(a.binding.clone(), SLOT, &astore).unwrap();
-        let bt = Threads::load(b.binding.clone(), SLOT, &bstore).unwrap();
+        let at = ai.view(SLOT, &astore).unwrap();
+        let bt = bi.view(SLOT, &bstore).unwrap();
+        let abandoned = bt.key_package(&mut b.port()).await.unwrap();
+        drop(abandoned);
+        let raced = bt.key_package(&mut b.port()).await.unwrap();
         let package = bt
             .key_package(&mut b.port())
             .await
             .unwrap()
-            .commit(&mut b.port(), &mut Grant::new(), &mut bstore, [1; 32], &[])
+            .commit(&mut b.port(), &mut Grant::new(), &mut bstore, [1; 32])
             .await
             .unwrap();
+        assert!(
+            raced
+                .commit(&mut b.port(), &mut Grant::new(), &mut bstore, [91; 32])
+                .await
+                .is_err()
+        );
         let Event::KeyPackage { bytes } = &package.events()[0] else {
             panic!()
         };
+        assert!(
+            at.create_direct(&mut a.port(), &mut cthr::Unavailable, "bob", bytes)
+                .await
+                .is_err()
+        );
         let invitation = at
             .create_direct(&mut a.port(), &mut Grant::new(), "bob", bytes)
             .await
             .unwrap()
-            .commit(&mut a.port(), &mut Grant::new(), &mut astore, [1; 32], &[])
+            .commit(&mut a.port(), &mut Grant::new(), &mut astore, [1; 32])
             .await
             .unwrap();
         let Event::Invitation { welcome, .. } = &invitation.events()[0] else {
             panic!()
         };
-        package
-            .threads()
+        assert!(
+            bi.view(SLOT, &bstore)
+                .unwrap()
+                .join_direct(&mut b.port(), &mut cthr::Unavailable, "alice", welcome)
+                .await
+                .is_err()
+        );
+        bi.view(SLOT, &bstore)
+            .unwrap()
             .join_direct(&mut b.port(), &mut Grant::new(), "alice", welcome)
             .await
             .unwrap()
-            .commit(&mut b.port(), &mut Grant::new(), &mut bstore, [2; 32], &[])
+            .commit(&mut b.port(), &mut Grant::new(), &mut bstore, [2; 32])
             .await
             .unwrap();
+        assert!(
+            bi.view(SLOT, &bstore)
+                .unwrap()
+                .key_package(&mut b.port())
+                .await
+                .is_err()
+        );
         let pending = ai
             .view(SLOT, &astore)
             .unwrap()
@@ -275,6 +317,15 @@ fn established_message_uses_real_owners_through_the_facade() {
             .outgoing(&mut a.keys, &ah, &mut directory, &mut astore, [4; 32])
             .await
             .unwrap();
+        assert_eq!(
+            ai.view(SLOT, &astore)
+                .unwrap()
+                .retry(&id, &mut directory)
+                .await
+                .unwrap()
+                .bytes(),
+            wire.bytes()
+        );
         assert_eq!(
             bi.view(SLOT, &bstore)
                 .unwrap()
