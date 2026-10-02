@@ -4,30 +4,25 @@ Member-device composition over Contacts, Threads, Delivery and Waves.
 
 ## Scope
 
-Wire contact and outcome operations, direct/fork/room conversations, accepted
-history and live/offline delivery status. Wallet owns balance/proof capability;
-Groups supplies verified membership decisions from Board. Read state from the
-owners and publish combined candidates through the same Vault checkpoint.
+### Purpose
 
-Never duplicate a relationship journal, MLS ratchet, accounting state, ACK or
-group policy. No Forum connection, frontend privilege, raw MLS/balance-store
-bypass or Wave release before accepted evidence and durable publication.
-All product frontends use the cmsg door.
+Every conversation of the member, one to one and in groups, by wiring `cwvs`, `ctcs`, `cthr` and `cdlv`.
 
-**States.** Derived Idle, WaitingForRelease, LiveConversation and ClosedOrOffline;
-Inbox persists no independent domain state.
+### Owns
 
-**Ports.** Typed owner views and candidate publication. Current established direct
-send, receive and ACK paths compose Contacts, Threads, Delivery and Store; Waves,
-Wallet, Groups and Records provide the remaining first-contact/group/offline ports.
-A repeated message returns Delivery's durable receipt; a repeated ACK reports the
-owner's existing acceptance without another history transition.
+Wiring only, with typed results for wave, outcome, contact and conversation operations and no state of its own. Covers direct, group and room conversation and delivery-status operations, using `cwlt`, `cgrp` and `cdht`.
 
-**Invariants and tests.** Full acceptance requires real reservation → release →
-Answer → unmetered direct chat, close/block cancellation, failed-store refusal
-before first content, and a combined owner checkpoint. Native and actual Wasm
-vectors must use the real leaves. Synthetic test issuers establish only the
-fixture's authority boundary, never production device attestation or accounting.
+### Never
+
+Reimplements contact rules, encryption, acknowledgements or group governance. Holds a forum connection, releases a wave before accepted accounting and a durable checkpoint, or exposes raw MLS or an accounting bypass.
+
+### States
+
+Derived Idle, WaitingForRelease, LiveConversation and ClosedOrOffline.
+
+### Test obligations
+
+Full reservation to release to Answer to unmetered direct chat with the real libraries, close and block cancelling live work, failed storage never exposing uncommitted first content, and one combined checkpoint. Native and Wasm behaviour with identical vectors, full line and branch coverage, real round trips without mocks of its own logic, injected delay, duplication, loss, cancellation, clock regression, corruption and storage conflicts, atomic publication with acknowledgement only after durable acceptance, per-community isolation, and bounded work without its own cryptography.
 
 ## Status
 
