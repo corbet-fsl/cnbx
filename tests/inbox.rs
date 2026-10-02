@@ -1,6 +1,12 @@
 //! Real OpenMLS and scoped Keys vectors. Test issuers are not production G3/G2.
 #[path = "support/dropped_facade_candidates.rs"]
 mod dropped_facade_candidates;
+#[path = "support/group_authority.rs"]
+mod group_authority;
+#[path = "support/group_consent.rs"]
+mod group_consent;
+#[path = "support/shared_vault.rs"]
+mod shared_vault;
 mod support;
 use cdlv::Status;
 use ckmg::{Binding, KeyHandle, Lineage};
