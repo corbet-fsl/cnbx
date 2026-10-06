@@ -1,6 +1,18 @@
 //! Thin device Inbox composition. Every fact and mutation comes from its owner.
-use ckmg::{Authority, Binding, Clock, Entropy, KeyHandle, Keys, SecureStore};
+mod conversation;
+mod groups;
+pub use cdlv::{Status as DeliveryStatus, Wire};
+pub use cgrp::{
+    Command as GroupCommand, Consent as GroupConsent, GroupView, Request as GroupRequest,
+};
+pub use ckmg::Binding;
+use ckmg::{Authority, Clock, Entropy, KeyHandle, Keys, SecureStore};
+pub use conversation::{ConversationView, Opened, Preparing};
+pub use ctcs::{DeviceAuthority, Relation, State as ContactState};
+pub use cthr::keys::{Custody, KeyPort};
+pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
+pub use groups::{GroupAction, GroupConversation, GroupPublication, PreparingGroup};
 
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
@@ -9,6 +21,7 @@ pub enum Error {
     Contacts(ctcs::Error),
     Threads(cthr::Error),
     Delivery(cdlv::Error),
+    Groups(cgrp::Error),
     UnexpectedMessage,
 }
 pub type Result<T> = std::result::Result<T, Error>;
@@ -50,6 +63,26 @@ impl Inbox {
     }
 }
 impl View {
+    /// Local API projection; every field is derived from the committed owners.
+    pub fn snapshot(&self, peer: &str) -> Result<ConversationView> {
+        Ok(ConversationView {
+            relation: self.relation(peer)?,
+            history: self.history().to_vec(),
+        })
+    }
+
+    /// Reload the view after any checkpoint; retries reuse the exact durable wire.
+    pub async fn retry(
+        &self,
+        message: &[u8; 32],
+        devices: &mut impl ctcs::DeviceAuthority,
+    ) -> Result<cdlv::Wire> {
+        self.delivery
+            .retry(message, devices, &self.contacts)
+            .await
+            .map_err(Error::Delivery)
+    }
+
     pub fn relation(&self, peer: &str) -> Result<ctcs::Relation> {
         self.contacts.relation(peer).map_err(Error::Contacts)
     }
