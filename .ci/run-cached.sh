@@ -21,8 +21,6 @@ exec 9>"$state/lock"
 flock -w "${CI_TIMEOUT:-2700}" 9
 mkdir -p "$state/moon-cache/hashes" "$state/moon-cache/outputs" "$state/moon-home"
 mkdir -p .moon/cache
-ln -s "$state/moon-cache/hashes" .moon/cache/hashes
-ln -s "$state/moon-cache/outputs" .moon/cache/outputs
 # Tool installation is an explicit part of this job, in persistent CI storage.
 # No Node: CI runs no node steps. jq reads the wasm-bindgen version from the
 # committed metadata; curl fetches the lock-matched prebuilt wasm runner
