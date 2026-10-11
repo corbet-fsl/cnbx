@@ -11,7 +11,7 @@ pub use ckmg::Binding;
 use ckmg::{Authority, Clock, Entropy, KeyHandle, Keys, SecureStore};
 pub use contacts::{Contacts, OwnAction, OwnDevice};
 pub use conversation::{ConversationView, Opened, Preparing};
-pub use ctcs::{DeviceAuthority, Relation, State as ContactState};
+pub use ctcs::{DeviceAuthority, Error as ContactError, Relation, State as ContactState};
 pub use cthr::keys::{Custody, KeyPort};
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
