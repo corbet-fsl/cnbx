@@ -47,7 +47,9 @@ fn pair() -> (WaveContext, WaveContext) {
 fn offer_is_checkpointed_retained_and_never_replayed() {
     block_on(async {
         let cipher = ckmg::passkey::store_cipher(&prf(4), "alpha").unwrap();
-        let mut store = Store::create(Memory::new(), &cipher, "alpha").await.unwrap();
+        let mut store = Store::create(Memory::new(), &cipher, "alpha")
+            .await
+            .unwrap();
         let inbox = Inbox::new(Binding::new("alpha", "alice").unwrap());
         assert_eq!(
             inbox.waves([0; 32], &store).err(),

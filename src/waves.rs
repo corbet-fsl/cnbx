@@ -5,11 +5,11 @@
 //! protected first content leave the device or establishes a contact.
 use crate::{Error, Inbox, Result};
 use ckmg::Clock;
-pub use cwvs::{
-    ReservationView, State as WaveState, VerifiedWaveOutcome, VerifiedWaveReservation,
-    WaveContext, WaveOutcome,
-};
 use cwst::{Store, backend::Backend};
+pub use cwvs::{
+    ReservationView, State as WaveState, VerifiedWaveOutcome, VerifiedWaveReservation, WaveContext,
+    WaveOutcome,
+};
 
 /// Committed journal for this member. `member` is Accounting's SHA-256 of the
 /// canonical pseudonym, supplied by the trusted runtime.
