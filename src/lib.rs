@@ -1,4 +1,5 @@
 //! Thin device Inbox composition. Every fact and mutation comes from its owner.
+mod contacts;
 mod conversation;
 mod groups;
 mod waves;
@@ -8,6 +9,7 @@ pub use cgrp::{
 };
 pub use ckmg::Binding;
 use ckmg::{Authority, Clock, Entropy, KeyHandle, Keys, SecureStore};
+pub use contacts::{Contacts, OwnAction, OwnDevice};
 pub use conversation::{ConversationView, Opened, Preparing};
 pub use ctcs::{DeviceAuthority, Relation, State as ContactState};
 pub use cthr::keys::{Custody, KeyPort};

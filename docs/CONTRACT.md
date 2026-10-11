@@ -78,3 +78,14 @@ reservations and outcomes consume Wallet's `VerifiedWaveReservation` and
 `VerifiedWaveOutcome`, which no caller JSON can construct. This is evidence
 progress only: it releases no first content and establishes no contact. Release
 still needs the combined Wallet, Contacts, Threads and Delivery checkpoint.
+
+## Own-authority Contacts
+
+`Inbox::contacts(store)` loads the committed relation journal. `Contacts::apply`
+signs one Block, Close or Reopen event with this device's own `ctcs.control`
+key, checks it against this device's own current lineage from Keys (`OwnDevice`,
+which answers for no peer) and delegates the single Contacts checkpoint. The store
+operation id is the hash of the signed bytes, so a retry reuses it. Begin (a new
+Pending contact) and Answered need first-contact release and verified Waves
+accounting evidence; `ctcs::UnavailableOutcomes` refuses them here. Peer-authored
+journal merges need a production peer lineage directory and are not exposed.
