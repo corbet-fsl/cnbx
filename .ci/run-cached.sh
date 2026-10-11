@@ -6,8 +6,8 @@ exec 2>&1
 : "${CI_COMMIT_SHA:?Missing verified source revision}"
 : "${CI_REPOSITORY_URL:?Missing canonical repository identity}"
 : "${CHECKS:?Missing declared check selection}"
-if [ "$CHECKS" != "verify,advisories" ]; then
-  echo "CHECKS must be exactly 'verify,advisories', got: $CHECKS" >&2
+if [ "$CHECKS" != "verify,advisories" ] && [ "$CHECKS" != "resolve-dependencies" ]; then
+  echo "CHECKS must be verify,advisories or resolve-dependencies, got: $CHECKS" >&2
   exit 2
 fi
 cache_root=${CI_CACHE_ROOT:-${CARGO_HOME:-}}
@@ -40,15 +40,13 @@ export PATH="$(dirname "$CCID_BIN"):$CARGO_HOME/bin:$PROTO_HOME/shims:$PROTO_HOM
 export CI_JOBS="${CI_JOBS:-2}" CARGO_BUILD_JOBS="${CI_JOBS:-2}"
 export RUST_TEST_THREADS="${CI_TEST_THREADS:-2}"
 export CARGO_NET_GIT_FETCH_WITH_CLI=true
-if [ -n "${GIT_CONFIG_COUNT:-}" ]; then
-  echo 'GIT_CONFIG_COUNT is already set; refusing to overwrite job git config' >&2
-  exit 2
-fi
-export GIT_CONFIG_COUNT=2
-export GIT_CONFIG_KEY_0='url.https://git.corbet.ch/corbet-libs/.insteadOf'
-export GIT_CONFIG_VALUE_0='https://github.com/corbet-libs/'
-export GIT_CONFIG_KEY_1='url.https://git.corbet.ch/corbet-foss/.insteadOf'
-export GIT_CONFIG_VALUE_1='https://github.com/corbet-foss/'
+# Append to any git config the verified runtime already supplies through the environment.
+git_config_base=${GIT_CONFIG_COUNT:-0}
+export GIT_CONFIG_COUNT=$((git_config_base + 2))
+export "GIT_CONFIG_KEY_$((git_config_base + 0))=url.https://git.corbet.ch/corbet-libs/.insteadOf"
+export "GIT_CONFIG_VALUE_$((git_config_base + 0))=https://github.com/corbet-libs/"
+export "GIT_CONFIG_KEY_$((git_config_base + 1))=url.https://git.corbet.ch/corbet-foss/.insteadOf"
+export "GIT_CONFIG_VALUE_$((git_config_base + 1))=https://github.com/corbet-foss/"
 # Shared-first toolchain lock: jobs share a provisioned toolchain and take
 # exclusive only to provision missing pieces. Same lock file, so old
 # whole-job-exclusive runners interoperate (they just serialize).
@@ -86,6 +84,9 @@ chromium --version
 cargo-deny --version
 rustup run nightly rustc -vV
 rustup run nightly cargo llvm-cov --version
+if [ "$CHECKS" = "resolve-dependencies" ]; then
+  exec "$CCID_BIN" check --repo "$PWD" --check "$CHECKS"
+fi
 "$CCID_BIN" cached --repo "$PWD" --check verify
 test -s ".ccid/results/verify.jsonl"
 "$CCID_BIN" check --repo "$PWD" --check advisories

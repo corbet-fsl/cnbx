@@ -32,8 +32,13 @@ cache_outputs = ["coverage.json", "coverage.lcov", "coverage.txt", "dependency-m
 kind = "commands"
 commands = [["cargo", "deny", "--locked", "check", "advisories"]]
 
+[checks.resolve-dependencies]
+kind = "commands"
+commands = [["bash", ".ci/resolve-dependencies.sh"]]
+cache_outputs = ["Cargo.lock"]
+
 [render]
-tool_revision = "53c129c2efa3b9279d2ecbc237d15acdfb656d8c"
+tool_revision = "e38f347d6941aa105ac4b55a0d4b8fec2ef22433"
 
 [jobs.verify]
 scheduler = "crow"
@@ -47,3 +52,9 @@ branch = "v01"
 consumer_branch = "v01"
 job = "v01-push"
 self_name = "cnbx"
+
+[jobs.resolve-dependencies]
+scheduler = "crow"
+checks = ["resolve-dependencies"]
+workflow = "repository-jobs"
+command = ["bash", ".ci/run-cached.sh"]
