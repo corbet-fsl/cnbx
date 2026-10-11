@@ -39,8 +39,7 @@ git diff --exit-code -- src tests > formatting.patch || formatting_outcome=$?
 CNBX_LAST_GATE="clippy"
 cargo clippy --locked --all-targets -- -D warnings
 CNBX_LAST_GATE="native-tests"
-# DEBT: shared_vault fails with Unlock on the current Keys/Vault pins (not Inbox code); skipped so the other vectors run.
-cargo test --locked -- --skip shared_vault::actual_vault_keys_and_inbox_share_one_checkpoint_without_relocking
+cargo test --locked
 # Install the lock-matched prebuilt wasm runner job-locally (adapts CI's
 # GITHUB_PATH step to an explicit PATH export for Crow).
 CNBX_LAST_GATE="wasm-runner-version"
@@ -75,7 +74,7 @@ mkdir -p "$RUNNER_TEMP/bin"
 ln -sf "$CHROME_BIN" "$RUNNER_TEMP/bin/google-chrome"
 export PATH="$RUNNER_TEMP/bin:$PATH"
 CNBX_LAST_GATE="wasm-tests"
-cargo test --locked --target wasm32-unknown-unknown --test inbox --test waves --test contacts -- --skip shared_vault::actual_vault_keys_and_inbox_share_one_checkpoint_without_relocking
+cargo test --locked --target wasm32-unknown-unknown --test inbox --test waves --test contacts
 # CI's end-of-job formatting gate (runs even when earlier steps fail the
 # patch capture above only as advisory): enforce the captured outcome now.
 CNBX_LAST_GATE="formatting-gate"
