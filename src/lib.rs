@@ -1,6 +1,7 @@
 //! Thin device Inbox composition. Every fact and mutation comes from its owner.
 mod conversation;
 mod groups;
+mod waves;
 pub use cdlv::{Status as DeliveryStatus, Wire};
 pub use cgrp::{
     Command as GroupCommand, Consent as GroupConsent, GroupView, Request as GroupRequest,
@@ -13,6 +14,10 @@ pub use cthr::keys::{Custody, KeyPort};
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
 pub use groups::{GroupAction, GroupConversation, GroupPublication, PreparingGroup};
+pub use waves::{
+    PreparedWave, ReservationView, VerifiedWaveOutcome, VerifiedWaveReservation, WaveContext,
+    WaveOutcome, WaveState, Waves,
+};
 
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
@@ -22,6 +27,7 @@ pub enum Error {
     Threads(cthr::Error),
     Delivery(cdlv::Error),
     Groups(cgrp::Error),
+    Waves(cwvs::Error),
     UnexpectedMessage,
 }
 pub type Result<T> = std::result::Result<T, Error>;

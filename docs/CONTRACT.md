@@ -66,3 +66,15 @@ This path covers immutable Circle/Ingroup forks. Opening/Public ordered MLS,
 Attend history/key handover and group Delivery envelopes remain unavailable;
 the facade preserves those owner refusals. Real three-member MLS tests use a
 signed fixture registry, not production G3/contact authority or live transport.
+
+## Waves journal
+
+`Inbox::waves(member, store)` loads Waves' committed reservation journal, where
+`member` is Accounting's SHA-256 of the canonical pseudonym, supplied by the
+trusted runtime. `Waves::{reservations,offer}` are owner views. `prepare_offer`,
+`accept_reservations` and `record_outcome` return an opaque `PreparedWave` and
+`PreparedWave::commit` delegates the owner's single checkpoint. Accepting
+reservations and outcomes consume Wallet's `VerifiedWaveReservation` and
+`VerifiedWaveOutcome`, which no caller JSON can construct. This is evidence
+progress only: it releases no first content and establishes no contact. Release
+still needs the combined Wallet, Contacts, Threads and Delivery checkpoint.
