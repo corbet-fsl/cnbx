@@ -1,8 +1,10 @@
 //! Thin device Inbox composition. Every fact and mutation comes from its owner.
+mod authority;
 mod contacts;
 mod conversation;
 mod groups;
 mod waves;
+pub use authority::ContactAuthority;
 pub use cdlv::{Status as DeliveryStatus, Wire};
 pub use cgrp::{
     Command as GroupCommand, Consent as GroupConsent, GroupView, Request as GroupRequest,
