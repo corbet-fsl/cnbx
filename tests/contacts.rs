@@ -2,7 +2,7 @@
 //! production G3 authority.
 mod support;
 use ckmg::Binding;
-use cnbx::{ContactState, Error, Inbox, OwnAction};
+use cnbx::{ContactState, Contacts, Error, Inbox, OwnAction};
 use cwst::{Store, backend::Memory};
 use futures::executor::block_on;
 use support::{Guard, Time, create, machine, prf};
@@ -24,6 +24,7 @@ fn block_is_signed_checkpointed_and_survives_reload() {
         let binding = Binding::new("alpha", "alice").unwrap();
         let mut keys = machine(&support::Memory::default(), &Time::default(), &guard, 3);
         create(&mut keys, &guard, &prf(3), &binding).await;
+        let handle = Contacts::key(&mut keys).await.unwrap();
         let mut store = store(3).await;
         let inbox = Inbox::new(binding);
         let contacts = inbox.contacts(&store).unwrap();
@@ -34,14 +35,14 @@ fn block_is_signed_checkpointed_and_survives_reload() {
         assert!(contacts.blocking_rules().unwrap().is_empty());
 
         let closed = contacts
-            .apply("bob", OwnAction::Close, &mut keys, &mut store)
+            .apply("bob", OwnAction::Close, &mut keys, &handle, &mut store)
             .await
             .unwrap();
         assert_eq!(closed.relation("bob").unwrap().state, ContactState::Closed);
         assert!(closed.blocking_rules().unwrap().is_empty());
 
         let blocked = closed
-            .apply("bob", OwnAction::Block, &mut keys, &mut store)
+            .apply("bob", OwnAction::Block, &mut keys, &handle, &mut store)
             .await
             .unwrap();
         assert_eq!(
@@ -62,7 +63,7 @@ fn block_is_signed_checkpointed_and_survives_reload() {
 
         // Closing never lifts a block.
         let still = reloaded
-            .apply("bob", OwnAction::Close, &mut keys, &mut store)
+            .apply("bob", OwnAction::Close, &mut keys, &handle, &mut store)
             .await
             .unwrap();
         assert_eq!(still.relation("bob").unwrap().state, ContactState::Blocked);
@@ -76,6 +77,7 @@ fn block_is_signed_checkpointed_and_survives_reload() {
                     conversation: [9; 32],
                 },
                 &mut keys,
+                &handle,
                 &mut store,
             )
             .await
@@ -84,7 +86,7 @@ fn block_is_signed_checkpointed_and_survives_reload() {
         assert_eq!(relation.state, ContactState::Pending);
         assert_eq!(relation.conversation, Some([9; 32]));
         let again = reopened
-            .apply("bob", OwnAction::Block, &mut keys, &mut store)
+            .apply("bob", OwnAction::Block, &mut keys, &handle, &mut store)
             .await
             .unwrap();
         assert_eq!(
@@ -95,6 +97,7 @@ fn block_is_signed_checkpointed_and_survives_reload() {
                         conversation: [9; 32]
                     },
                     &mut keys,
+                    &handle,
                     &mut store
                 )
                 .await
@@ -104,7 +107,7 @@ fn block_is_signed_checkpointed_and_survives_reload() {
         // A peer that is not a valid scoped identity, or the member itself, is refused.
         assert_eq!(
             again
-                .apply("alice", OwnAction::Block, &mut keys, &mut store)
+                .apply("alice", OwnAction::Block, &mut keys, &handle, &mut store)
                 .await
                 .err(),
             Some(Error::Contacts(ctcs::Error::Scope))

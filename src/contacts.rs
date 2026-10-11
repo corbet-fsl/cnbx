@@ -4,7 +4,7 @@
 //! A new contact (`Begin`) and an accepted Answer need first-contact release and
 //! verified Waves accounting evidence, so they are not reachable from here.
 use crate::{Error, Inbox, Result};
-use ckmg::{Authority, Binding, Clock, Entropy, Keys, Lineage, SecureStore};
+use ckmg::{Authority, Binding, Clock, Entropy, KeyHandle, Keys, Lineage, SecureStore};
 use cwst::{Store, backend::Backend};
 use serde::{Deserialize, Serialize};
 
@@ -71,6 +71,20 @@ impl Contacts {
         self.0.export_journal().map_err(Error::Contacts)
     }
 
+    /// The purpose key for own control events. Obtain it before taking the
+    /// shared Store: creating a key checkpoints through that same Store.
+    pub async fn key<S, C, R, A>(keys: &mut Keys<S, C, R, A>) -> Result<KeyHandle>
+    where
+        S: SecureStore,
+        C: Clock,
+        R: Entropy,
+        A: Authority,
+    {
+        keys.key(ctcs::purpose())
+            .await
+            .map_err(|_| Error::Contacts(ctcs::Error::Authority))
+    }
+
     /// Sign one own-authority control event and checkpoint it. The store
     /// operation id is the hash of the signed bytes, so a lost response is
     /// retried with the same id and never becomes a second operation.
@@ -79,6 +93,7 @@ impl Contacts {
         peer: &str,
         action: OwnAction,
         keys: &mut Keys<S, C, R, A>,
+        handle: &KeyHandle,
         store: &mut Store<B>,
     ) -> Result<Self>
     where
@@ -93,11 +108,10 @@ impl Contacts {
             .request(peer, action.into())
             .map_err(Error::Contacts)?;
         let authority = Error::Contacts(ctcs::Error::Authority);
-        let handle = keys.key(ctcs::purpose()).await.map_err(|_| authority)?;
         let certificate = handle.certificate().clone();
         let bytes = event.signing_bytes(&certificate).map_err(Error::Contacts)?;
         let operation = *ckmg::hash(&bytes).value();
-        let signature = keys.sign(&handle, &bytes).await.map_err(|_| authority)?;
+        let signature = keys.sign(handle, &bytes).await.map_err(|_| authority)?;
         let signed = event.signed(certificate, signature);
         let mut device = OwnDevice(keys);
         let mut outcomes = ctcs::UnavailableOutcomes;
