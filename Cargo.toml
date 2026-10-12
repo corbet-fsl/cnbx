@@ -17,6 +17,7 @@ cwvs = { git = "https://git.corbet.ch/corbet-foss/cwvs.git", branch = "v01" }
 cgrp = { git = "https://git.corbet.ch/corbet-foss/cgrp.git", branch = "v01" }
 serde = { version = "1", features = ["derive"] }
 schemars = "1"
+sha2 = "0.11"
 
 [dev-dependencies]
 cvlt = { git = "https://git.corbet.ch/corbet-libs/cvlt.git", branch = "v01" }
@@ -27,7 +28,6 @@ ed25519-dalek = "3"
 blake3 = "1"
 rand_chacha = "0.10"
 rand_core = "0.10"
-sha2 = "0.11"
 
 [lints.rust]
 unsafe_code = "forbid"

@@ -84,3 +84,21 @@ fn offer_is_checkpointed_retained_and_never_replayed() {
         );
     });
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn member_digest_accepts_only_the_canonical_pseudonym_string() {
+    let digest = |member: &str| Inbox::new(Binding::new("alpha", member).unwrap()).member_digest();
+    let hex = "ab".repeat(48);
+    let bytes = [0xab_u8; 48];
+    assert_eq!(
+        digest(&hex).unwrap(),
+        <[u8; 32]>::from(Sha256::digest(bytes))
+    );
+    let refused = Err(Error::Waves(cwvs::Error::Scope));
+    assert_eq!(digest("alice"), refused);
+    assert_eq!(digest(&"AB".repeat(48)), refused);
+    assert_eq!(digest(&"ab".repeat(47)), refused);
+    assert_eq!(digest(&format!("{}zz", "ab".repeat(47))), refused);
+    assert_eq!(digest(&format!("{}g0", "ab".repeat(47))), refused);
+}

@@ -18,6 +18,27 @@ pub struct Waves(pub(crate) cwvs::Waves);
 pub struct PreparedWave(pub(crate) cwvs::Candidate);
 
 impl Inbox {
+    /// Accounting's member digest: SHA-256 of the 48 pseudonym bytes. The bound
+    /// member string must be exactly cpsd's `Pseudonym::to_hex` (96 lowercase hex
+    /// characters); anything else is refused. Curve validity is enforced where
+    /// pseudonyms are created and verified, not here.
+    pub fn member_digest(&self) -> Result<[u8; 32]> {
+        use sha2::{Digest, Sha256};
+        let text = self.binding.member().as_bytes();
+        if text.len() != 96 {
+            return Err(Error::Waves(cwvs::Error::Scope));
+        }
+        let mut bytes = [0u8; 48];
+        for (byte, pair) in bytes.iter_mut().zip(text.chunks_exact(2)) {
+            let nibble = |c: u8| match c {
+                b'0'..=b'9' => Ok(c - b'0'),
+                b'a'..=b'f' => Ok(c - b'a' + 10),
+                _ => Err(Error::Waves(cwvs::Error::Scope)),
+            };
+            *byte = nibble(pair[0])? << 4 | nibble(pair[1])?;
+        }
+        Ok(Sha256::digest(bytes).into())
+    }
     pub fn waves<B: Backend>(&self, member: [u8; 32], store: &Store<B>) -> Result<Waves> {
         cwvs::Waves::load(self.binding.community(), member, store)
             .map(Waves)
