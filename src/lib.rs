@@ -3,6 +3,7 @@ mod authority;
 mod contacts;
 mod conversation;
 mod groups;
+mod handle;
 mod release;
 mod waves;
 pub use authority::ContactAuthority;
@@ -19,6 +20,7 @@ pub use cthr::keys::{Custody, KeyPort};
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
 pub use groups::{GroupAction, GroupConversation, GroupPublication, PreparingGroup};
+pub use handle::HandleAnnouncement;
 pub use release::{OwnRecord, Release, Released, WalletChange, check as check_release};
 pub use waves::WavesOutcomes;
 pub use waves::{

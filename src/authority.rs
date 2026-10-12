@@ -42,7 +42,11 @@ impl<P: ctcs::DeviceAuthority> DirectAuthority for ContactAuthority<'_, P> {
             .peers
             .current(&peer_binding)
             .await
-            .map_err(|_| Error::Unavailable)?;
+            .map_err(|error| match error {
+                // Present and negative evidence only; anything missing or stale is Unavailable.
+                ctcs::Error::Authority => Error::Authority,
+                _ => Error::Unavailable,
+            })?;
         if lineage.binding == peer_binding {
             Ok(())
         } else {

@@ -21,7 +21,7 @@ impl DeviceAuthority for Directory {
         self.0
             .get(binding.member())
             .cloned()
-            .ok_or(ctcs::Error::Authority)
+            .ok_or(ctcs::Error::Unavailable)
     }
 }
 // Stand-in for the Waves-backed outcome authority, used only to reach Established.

@@ -103,10 +103,30 @@ impl Contacts {
         A: Authority,
         B: Backend,
     {
-        let event = self
-            .0
-            .request(peer, action.into())
-            .map_err(Error::Contacts)?;
+        self.author(peer, action.into(), keys, handle, store).await
+    }
+
+    /// The newest retained lineage-record handle of `peer`.
+    pub fn handle(&self, peer: &str) -> Result<Option<Vec<u8>>> {
+        self.0.handle(peer).map_err(Error::Contacts)
+    }
+
+    pub(crate) async fn author<S, C, R, A, B>(
+        &self,
+        peer: &str,
+        action: ctcs::Action,
+        keys: &mut Keys<S, C, R, A>,
+        handle: &KeyHandle,
+        store: &mut Store<B>,
+    ) -> Result<Self>
+    where
+        S: SecureStore,
+        C: Clock,
+        R: Entropy,
+        A: Authority,
+        B: Backend,
+    {
+        let event = self.0.request(peer, action).map_err(Error::Contacts)?;
         let authority = Error::Contacts(ctcs::Error::Authority);
         let certificate = handle.certificate().clone();
         let bytes = event.signing_bytes(&certificate).map_err(Error::Contacts)?;
