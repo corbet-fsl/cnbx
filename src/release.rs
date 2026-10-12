@@ -9,7 +9,7 @@
 use crate::{
     Error, Pending, Published, Result, contacts::Contacts, waves::PreparedWave, waves::Waves,
 };
-use ckmg::Clock;
+use ckmg::{Binding, Clock};
 use cwst::{Change, Store, backend::Backend};
 
 /// One record the Wallet owner (cwlt) adopts in the same transaction. The Wallet
@@ -27,6 +27,9 @@ impl WalletChange {
 
 /// The four owner candidates of one release, sender or recipient side.
 pub struct Release {
+    pub binding: Binding,
+    pub peer: String,
+    pub conversation: [u8; 32],
     pub waves: PreparedWave,
     pub contacts: ctcs::Candidate,
     pub delivery: Pending,
@@ -38,6 +41,41 @@ pub struct Released {
     pub waves: Waves,
     pub contacts: Contacts,
     pub published: Published,
+}
+
+/// Explicit release preconditions (Waves proposal section 5). Returns the Waves
+/// candidate with the released conversation linked; nothing is written. Evidence
+/// that the reservations are verified is the candidate itself: only verified
+/// Wallet values produce one past `Prepared`, and linking refuses `Prepared`.
+pub async fn check<B: Backend, D: ctcs::DeviceAuthority>(
+    binding: &Binding,
+    peer: &str,
+    conversation: [u8; 32],
+    waves: PreparedWave,
+    store: &Store<B>,
+    devices: &mut D,
+) -> Result<PreparedWave> {
+    let peer_binding =
+        Binding::new(binding.community(), peer).map_err(|_| Error::Contacts(ctcs::Error::Scope))?;
+    if peer == binding.member() {
+        return Err(Error::Contacts(ctcs::Error::Scope));
+    }
+    // No block in the committed journal. A block by the peer is never visible
+    // here and is handled by the protocol's own Close/Block events.
+    let contacts = ctcs::Contacts::load(binding.clone(), store).map_err(Error::Contacts)?;
+    if contacts.relation(peer).map_err(Error::Contacts)?.state == ctcs::State::Blocked {
+        return Err(Error::Contacts(ctcs::Error::Transition));
+    }
+    // Peer lineage must be independently current right now.
+    devices
+        .current(&peer_binding)
+        .await
+        .map_err(Error::Contacts)?;
+    waves
+        .0
+        .link_conversation(conversation)
+        .map(PreparedWave)
+        .map_err(Error::Waves)
 }
 
 impl Release {
@@ -57,7 +95,16 @@ impl Release {
         D: ctcs::DeviceAuthority,
         O: ctcs::OutcomeAuthority,
     {
-        let waves = self.waves.0.stage(store, clock).map_err(Error::Waves)?;
+        let waves = check(
+            &self.binding,
+            &self.peer,
+            self.conversation,
+            self.waves,
+            store,
+            devices,
+        )
+        .await?;
+        let waves = waves.0.stage(store, clock).map_err(Error::Waves)?;
         let contacts = self
             .contacts
             .stage((&mut *devices, outcomes), store)

@@ -4,7 +4,7 @@
 //! facade adds no state. Evidence progress is not release: no method here lets
 //! protected first content leave the device or establishes a contact.
 use crate::{Error, Inbox, Result};
-use ckmg::Clock;
+use ckmg::{Binding, Clock};
 use cwst::{Store, backend::Backend};
 pub use cwvs::{
     ReservationView, State as WaveState, VerifiedWaveOutcome, VerifiedWaveReservation, WaveContext,
@@ -23,21 +23,14 @@ impl Inbox {
     /// characters); anything else is refused. Curve validity is enforced where
     /// pseudonyms are created and verified, not here.
     pub fn member_digest(&self) -> Result<[u8; 32]> {
-        use sha2::{Digest, Sha256};
-        let text = self.binding.member().as_bytes();
-        if text.len() != 96 {
-            return Err(Error::Waves(cwvs::Error::Scope));
+        digest_of(self.binding.member())
+    }
+    /// The Contacts outcome authority backed by this member's Waves journal.
+    pub fn outcomes<'a>(&'a self, waves: &'a Waves) -> WavesOutcomes<'a> {
+        WavesOutcomes {
+            binding: &self.binding,
+            waves,
         }
-        let mut bytes = [0u8; 48];
-        for (byte, pair) in bytes.iter_mut().zip(text.as_chunks::<2>().0) {
-            let nibble = |c: u8| match c {
-                b'0'..=b'9' => Ok(c - b'0'),
-                b'a'..=b'f' => Ok(c - b'a' + 10),
-                _ => Err(Error::Waves(cwvs::Error::Scope)),
-            };
-            *byte = nibble(pair[0])? << 4 | nibble(pair[1])?;
-        }
-        Ok(Sha256::digest(bytes).into())
     }
     pub fn waves<B: Backend>(&self, member: [u8; 32], store: &Store<B>) -> Result<Waves> {
         cwvs::Waves::load(self.binding.community(), member, store)
@@ -102,5 +95,47 @@ impl PreparedWave {
             .await
             .map(Waves)
             .map_err(Error::Waves)
+    }
+}
+
+fn digest_of(member: &str) -> Result<[u8; 32]> {
+    use sha2::{Digest, Sha256};
+    let text = member.as_bytes();
+    if text.len() != 96 {
+        return Err(Error::Waves(cwvs::Error::Scope));
+    }
+    let mut bytes = [0u8; 48];
+    for (byte, pair) in bytes.iter_mut().zip(text.as_chunks::<2>().0) {
+        let nibble = |c: u8| match c {
+            b'0'..=b'9' => Ok(c - b'0'),
+            b'a'..=b'f' => Ok(c - b'a' + 10),
+            _ => Err(Error::Waves(cwvs::Error::Scope)),
+        };
+        *byte = nibble(pair[0])? << 4 | nibble(pair[1])?;
+    }
+    Ok(Sha256::digest(bytes).into())
+}
+
+/// Accepts `Answered{conversation, evidence}` only if this member's Waves journal
+/// links the conversation to a wave holding an Answer outcome whose receipt
+/// digest is exactly `evidence` (32 bytes), for exactly this peer.
+pub struct WavesOutcomes<'a> {
+    binding: &'a Binding,
+    waves: &'a Waves,
+}
+impl ctcs::OutcomeAuthority for WavesOutcomes<'_> {
+    async fn answered(
+        &mut self,
+        binding: &Binding,
+        peer: &str,
+        conversation: &[u8; 32],
+        evidence: &[u8],
+    ) -> std::result::Result<(), ctcs::Error> {
+        let digest: &[u8; 32] = evidence.try_into().map_err(|_| ctcs::Error::Authority)?;
+        let peer = digest_of(peer).map_err(|_| ctcs::Error::Authority)?;
+        if binding != self.binding || !self.waves.0.answered(conversation, &peer, digest) {
+            return Err(ctcs::Error::Authority);
+        }
+        Ok(())
     }
 }
