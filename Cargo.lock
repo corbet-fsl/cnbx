@@ -578,7 +578,7 @@ dependencies = [
 [[package]]
 name = "cdlv"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/cdlv.git?branch=v01#14555ab1423059bb2100717f85862ff016ad455f"
+source = "git+https://git.corbet.ch/corbet-foss/cdlv.git?branch=v01#8f35df3261fe356d15dfd8b3ac0f552beb7aaefa"
 dependencies = [
  "ckmg",
  "ctcs",
@@ -1145,7 +1145,7 @@ dependencies = [
 [[package]]
 name = "ctcs"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/ctcs.git?branch=v01#42c8ebf1028febd52588dae78bd487868bfd8b13"
+source = "git+https://git.corbet.ch/corbet-foss/ctcs.git?branch=v01#9c1e50aa840f60ecd1ac940e3f578a8df83c7dd7"
 dependencies = [
  "ckmg",
  "cwst",
@@ -1157,7 +1157,7 @@ dependencies = [
 [[package]]
 name = "cthr"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/cthr.git?branch=v01#254fede6297598c629c2bf15851cfa6cecaa6199"
+source = "git+https://git.corbet.ch/corbet-foss/cthr.git?branch=v01#8004c53ec780c354d23fb515568ce23ce9116a47"
 dependencies = [
  "cchr",
  "cgrp",
@@ -1263,10 +1263,9 @@ dependencies = [
 [[package]]
 name = "cwlt"
 version = "0.0.0"
-source = "git+https://git.corbet.ch/corbet-foss/cwlt.git?branch=v01#0ce76e9a44a5d1738a83be9f8dcd4839f4f3006c"
+source = "git+https://git.corbet.ch/corbet-foss/cwlt?branch=main#7268bea1ec55dcf4dc84cc2be502ac0b27e71ad1"
 dependencies = [
  "czkp",
- "data-encoding",
  "schemars",
  "serde",
  "serde_json",
@@ -1300,7 +1299,7 @@ dependencies = [
 [[package]]
 name = "cwvs"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/cwvs.git?branch=v01#8807b49ffdc3c8a79433b1a7586aa61f4b15e175"
+source = "git+https://git.corbet.ch/corbet-foss/cwvs.git?branch=v01#f1c51a79884424a7a01aab8c07c2580bbc919f41"
 dependencies = [
  "cdlv",
  "ckmg",
@@ -1317,12 +1316,13 @@ dependencies = [
 [[package]]
 name = "czkp"
 version = "0.0.0"
-source = "git+https://git.corbet.ch/corbet-foss/czkp.git?branch=v01#1217e02ea7cfb99613cea50b3e87288efb392bb5"
+source = "git+https://git.corbet.ch/corbet-foss/czkp?branch=main#20a60821a96d46d0f57b9f5de6f5e7c8b5a73a3c"
 dependencies = [
  "ark-bn254",
  "ark-ff",
  "data-encoding",
  "ed25519-dalek 3.0.0",
+ "p256",
  "pso-poseidon",
  "rs_merkle",
  "schemars",
