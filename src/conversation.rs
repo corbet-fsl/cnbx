@@ -12,10 +12,10 @@ pub struct ConversationView {
 }
 
 /// A real Threads candidate; no package or welcome can escape before persistence.
-pub struct Preparing(cthr::Candidate);
+pub struct Preparing(pub(crate) cthr::Candidate);
 
 /// Setup outputs released only by the owner's successful durable checkpoint.
-pub struct Opened(cthr::Committed);
+pub struct Opened(pub(crate) cthr::Committed);
 
 impl View {
     pub async fn key_package(&self, keys: &mut impl cthr::keys::Custody) -> Result<Preparing> {
