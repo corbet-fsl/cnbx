@@ -578,7 +578,7 @@ dependencies = [
 [[package]]
 name = "cdlv"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/cdlv.git?branch=v01#8f35df3261fe356d15dfd8b3ac0f552beb7aaefa"
+source = "git+https://git.corbet.ch/corbet-foss/cdlv.git?branch=v01#13735ae68d7fa475c40b4342568edf8b9bf46e5e"
 dependencies = [
  "ckmg",
  "ctcs",
@@ -1145,7 +1145,7 @@ dependencies = [
 [[package]]
 name = "ctcs"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/ctcs.git?branch=v01#9c1e50aa840f60ecd1ac940e3f578a8df83c7dd7"
+source = "git+https://git.corbet.ch/corbet-foss/ctcs.git?branch=v01#2534d7c7214dfec71e682f320a94564de930cfb9"
 dependencies = [
  "ckmg",
  "cwst",
@@ -1157,7 +1157,7 @@ dependencies = [
 [[package]]
 name = "cthr"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/cthr.git?branch=v01#8004c53ec780c354d23fb515568ce23ce9116a47"
+source = "git+https://git.corbet.ch/corbet-foss/cthr.git?branch=v01#62591b7917941b73b7823d3d217fe892f305484b"
 dependencies = [
  "cchr",
  "cgrp",
@@ -1263,7 +1263,7 @@ dependencies = [
 [[package]]
 name = "cwlt"
 version = "0.0.0"
-source = "git+https://git.corbet.ch/corbet-foss/cwlt?branch=main#7268bea1ec55dcf4dc84cc2be502ac0b27e71ad1"
+source = "git+https://git.corbet.ch/corbet-foss/cwlt?branch=main#f39a2f100ea19fc6590edd34e750957e07d18484"
 dependencies = [
  "czkp",
  "schemars",
