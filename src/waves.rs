@@ -13,9 +13,9 @@ pub use cwvs::{
 
 /// Committed journal for this member. `member` is Accounting's SHA-256 of the
 /// canonical pseudonym, supplied by the trusted runtime.
-pub struct Waves(cwvs::Waves);
+pub struct Waves(pub(crate) cwvs::Waves);
 /// A real Waves candidate, not yet durable.
-pub struct PreparedWave(cwvs::Candidate);
+pub struct PreparedWave(pub(crate) cwvs::Candidate);
 
 impl Inbox {
     pub fn waves<B: Backend>(&self, member: [u8; 32], store: &Store<B>) -> Result<Waves> {

@@ -48,7 +48,7 @@ impl<S: SecureStore, C: Clock, R: Entropy, A: Authority> ctcs::DeviceAuthority
 }
 
 /// Committed relation journal of the bound member. Every fact is the owner's.
-pub struct Contacts(ctcs::Contacts);
+pub struct Contacts(pub(crate) ctcs::Contacts);
 
 impl Inbox {
     pub fn contacts<B: Backend>(&self, store: &Store<B>) -> Result<Contacts> {

@@ -3,6 +3,7 @@ mod authority;
 mod contacts;
 mod conversation;
 mod groups;
+mod release;
 mod waves;
 pub use authority::ContactAuthority;
 pub use cdlv::{Status as DeliveryStatus, Wire};
@@ -18,6 +19,7 @@ pub use cthr::keys::{Custody, KeyPort};
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
 pub use groups::{GroupAction, GroupConversation, GroupPublication, PreparingGroup};
+pub use release::{Release, Released, WalletChange};
 pub use waves::{
     PreparedWave, ReservationView, VerifiedWaveOutcome, VerifiedWaveReservation, WaveContext,
     WaveOutcome, WaveState, Waves,
@@ -43,8 +45,8 @@ pub struct View {
     threads: cthr::Threads,
     delivery: cdlv::Delivery,
 }
-pub struct Pending(cdlv::Candidate);
-pub struct Published(cdlv::Committed);
+pub struct Pending(pub(crate) cdlv::Candidate);
+pub struct Published(pub(crate) cdlv::Committed);
 /// An authenticated real MLS receive, still with no visible plaintext or ACK.
 pub enum Receive {
     Pending(Box<Receiving>),
