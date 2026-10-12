@@ -43,11 +43,19 @@ pub struct Released {
     pub published: Published,
 }
 
+/// G2: the member's own record matches the newest epoch commitment. The Wallet
+/// owner supplies the verification; the release never proceeds without it.
+#[allow(async_fn_in_trait)]
+pub trait OwnRecord {
+    async fn matches_newest_epoch(&mut self, binding: &Binding) -> std::result::Result<(), ()>;
+}
+
 /// Explicit release preconditions (Waves proposal section 5). Returns the Waves
 /// candidate with the released conversation linked; nothing is written. Evidence
 /// that the reservations are verified is the candidate itself: only verified
 /// Wallet values produce one past `Prepared`, and linking refuses `Prepared`.
 pub async fn check<B: Backend, D: ctcs::DeviceAuthority>(
+    own: &mut impl OwnRecord,
     binding: &Binding,
     peer: &str,
     conversation: [u8; 32],
@@ -82,6 +90,7 @@ impl Release {
     #[allow(clippy::too_many_arguments)]
     pub async fn commit<B, D, O>(
         self,
+        own: &mut impl OwnRecord,
         keys: &mut impl cthr::keys::Custody,
         authority: &mut impl cthr::DirectAuthority,
         devices: &mut D,
@@ -96,6 +105,7 @@ impl Release {
         O: ctcs::OutcomeAuthority,
     {
         let waves = check(
+            own,
             &self.binding,
             &self.peer,
             self.conversation,

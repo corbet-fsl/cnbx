@@ -4,7 +4,7 @@
 //! write nothing.
 mod support;
 use ckmg::Binding;
-use cnbx::{Error, Inbox, OwnAction, OwnDevice, WaveContext, check_release};
+use cnbx::{Error, Inbox, OwnAction, OwnDevice, OwnRecord, WaveContext, check_release};
 use cwst::{Store, backend::Memory};
 use futures::executor::block_on;
 use sha2::{Digest, Sha256};
@@ -15,6 +15,18 @@ wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 const ALICE: [u8; 32] = [1; 32];
 const BOB: [u8; 32] = [2; 32];
 
+struct Current;
+impl OwnRecord for Current {
+    async fn matches_newest_epoch(&mut self, _: &Binding) -> Result<(), ()> {
+        Ok(())
+    }
+}
+struct OutOfDate;
+impl OwnRecord for OutOfDate {
+    async fn matches_newest_epoch(&mut self, _: &Binding) -> Result<(), ()> {
+        Err(())
+    }
+}
 struct Stale;
 impl ctcs::DeviceAuthority for Stale {
     async fn current(&mut self, _: &Binding) -> Result<ckmg::Lineage, ctcs::Error> {
@@ -84,6 +96,7 @@ fn refused_releases_write_nothing() {
         // Waves evidence that is not past Prepared is not a verified reservation.
         assert_eq!(
             check_release(
+                &mut Current,
                 &alice,
                 "bob",
                 [9; 32],
@@ -95,18 +108,50 @@ fn refused_releases_write_nothing() {
             .err(),
             Some(Error::Waves(cwvs::Error::State))
         );
+        // An own record that does not match the newest epoch refuses first.
+        assert_eq!(
+            check_release(
+                &mut OutOfDate,
+                &alice,
+                "bob",
+                [9; 32],
+                offer(&store),
+                &store,
+                &mut Stale
+            )
+            .await
+            .err(),
+            Some(Error::Waves(cwvs::Error::Transcript))
+        );
+        assert_eq!(store.version().unwrap(), version);
         // A stale or unavailable peer lineage refuses.
         assert_eq!(
-            check_release(&alice, "bob", [9; 32], offer(&store), &store, &mut Stale)
-                .await
-                .err(),
+            check_release(
+                &mut Current,
+                &alice,
+                "bob",
+                [9; 32],
+                offer(&store),
+                &store,
+                &mut Stale
+            )
+            .await
+            .err(),
             Some(Error::Contacts(ctcs::Error::Authority))
         );
         // The member itself and malformed peers are refused.
         assert_eq!(
-            check_release(&alice, "alice", [9; 32], offer(&store), &store, &mut Stale)
-                .await
-                .err(),
+            check_release(
+                &mut Current,
+                &alice,
+                "alice",
+                [9; 32],
+                offer(&store),
+                &store,
+                &mut Stale
+            )
+            .await
+            .err(),
             Some(Error::Contacts(ctcs::Error::Scope))
         );
         // A block in the journal refuses before any lineage is consulted.
@@ -126,9 +171,17 @@ fn refused_releases_write_nothing() {
         let blocked_version = store.version().unwrap();
         assert!(blocked_version > version);
         assert_eq!(
-            check_release(&alice, "bob", [9; 32], offer(&store), &store, &mut Stale)
-                .await
-                .err(),
+            check_release(
+                &mut Current,
+                &alice,
+                "bob",
+                [9; 32],
+                offer(&store),
+                &store,
+                &mut Stale
+            )
+            .await
+            .err(),
             Some(Error::Contacts(ctcs::Error::Transition))
         );
         assert_eq!(store.version().unwrap(), blocked_version);
