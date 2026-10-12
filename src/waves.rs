@@ -29,7 +29,7 @@ impl Inbox {
             return Err(Error::Waves(cwvs::Error::Scope));
         }
         let mut bytes = [0u8; 48];
-        for (byte, pair) in bytes.iter_mut().zip(text.chunks_exact(2)) {
+        for (byte, pair) in bytes.iter_mut().zip(text.as_chunks::<2>().0) {
             let nibble = |c: u8| match c {
                 b'0'..=b'9' => Ok(c - b'0'),
                 b'a'..=b'f' => Ok(c - b'a' + 10),
