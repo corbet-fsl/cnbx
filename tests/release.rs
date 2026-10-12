@@ -132,7 +132,13 @@ fn refused_releases_write_nothing() {
             Some(Error::Contacts(ctcs::Error::Transition))
         );
         assert_eq!(store.version().unwrap(), blocked_version);
-        assert!(inbox.waves(ALICE, store).unwrap().reservations().is_empty());
+        assert!(
+            inbox
+                .waves(ALICE, &store)
+                .unwrap()
+                .reservations()
+                .is_empty()
+        );
     });
 }
 

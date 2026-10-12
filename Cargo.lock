@@ -1299,7 +1299,7 @@ dependencies = [
 [[package]]
 name = "cwvs"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/cwvs.git?branch=v01#f1c51a79884424a7a01aab8c07c2580bbc919f41"
+source = "git+https://git.corbet.ch/corbet-foss/cwvs.git?branch=v01#f7d761b84028603254f47f5e1031af2771c55363"
 dependencies = [
  "cdlv",
  "ckmg",
