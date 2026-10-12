@@ -39,7 +39,7 @@ git diff --exit-code -- src tests > formatting.patch || formatting_outcome=$?
 CNBX_LAST_GATE="clippy"
 cargo clippy --locked --all-targets -- -D warnings
 CNBX_LAST_GATE="native-tests"
-cargo test --locked
+cargo test --locked --no-fail-fast
 # Install the lock-matched prebuilt wasm runner job-locally (adapts CI's
 # GITHUB_PATH step to an explicit PATH export for Crow).
 CNBX_LAST_GATE="wasm-runner-version"
