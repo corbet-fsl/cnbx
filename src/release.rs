@@ -63,6 +63,10 @@ pub async fn check<B: Backend, D: ctcs::DeviceAuthority>(
     store: &Store<B>,
     devices: &mut D,
 ) -> Result<PreparedWave> {
+    // G2 first: a stale own record must never reach peers or the journal.
+    own.matches_newest_epoch(binding)
+        .await
+        .map_err(|()| Error::Waves(cwvs::Error::Transcript))?;
     let peer_binding =
         Binding::new(binding.community(), peer).map_err(|_| Error::Contacts(ctcs::Error::Scope))?;
     if peer == binding.member() {
