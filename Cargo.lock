@@ -1045,7 +1045,7 @@ dependencies = [
 [[package]]
 name = "crbk"
 version = "0.0.0"
-source = "git+https://git.corbet.ch/corbet-foss/crbk?branch=main#b9dba4d1f867bc1a3439f4ede6b4fdb2290cd692"
+source = "git+https://git.corbet.ch/corbet-foss/crbk?branch=main#d3431a1bcf8f440be3f3ee0def7588ced2f752db"
 dependencies = [
  "semver",
  "serde",
@@ -1145,7 +1145,7 @@ dependencies = [
 [[package]]
 name = "ctcs"
 version = "0.1.0"
-source = "git+https://git.corbet.ch/corbet-foss/ctcs.git?branch=v01#2534d7c7214dfec71e682f320a94564de930cfb9"
+source = "git+https://git.corbet.ch/corbet-foss/ctcs.git?branch=v01#7832d71eafd209693373744a24c1103a8b5df618"
 dependencies = [
  "ckmg",
  "cwst",
