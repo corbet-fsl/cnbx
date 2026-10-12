@@ -375,11 +375,25 @@ fn actual_vault_keys_and_inbox_share_one_checkpoint_without_relocking() {
                 .is_err()
             );
         }
+        // The Keys custody owner rewrapped the Store under the compound root
+        // cipher, so the original PRF cipher no longer opens it (production
+        // reopens through the retained checkpoint bootstrap, owned by Vault).
+        // Prove the committed state through the live shared Store, then lock.
+        {
+            let store = b_storage.lock().await;
+            let view = Inbox::new(bob.binding.clone()).view(SLOT, &store).unwrap();
+            assert_eq!(view.history()[0].bytes, b"one real Vault");
+            assert_eq!(view.delivery_status(&id), Some(Status::Accepted));
+        }
         bob.vault.lock().await;
+        {
+            let store = b_storage.lock().await;
+            assert!(Inbox::new(bob.binding.clone()).view(SLOT, &store).is_err());
+        }
         let cipher = ckmg::passkey::store_cipher(&prf(bob.seed), "alpha").unwrap();
-        let reopened = Store::open(bob.backend, &cipher, "alpha").await.unwrap();
-        let view = Inbox::new(bob.binding).view(SLOT, &reopened).unwrap();
-        assert_eq!(view.history()[0].bytes, b"one real Vault");
-        assert_eq!(view.delivery_status(&id), Some(Status::Accepted));
+        assert!(matches!(
+            Store::open(bob.backend, &cipher, "alpha").await,
+            Err(cwst::Error::Unlock)
+        ));
     });
 }
