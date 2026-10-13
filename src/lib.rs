@@ -1,6 +1,40 @@
 //! Thin device Inbox composition. Every fact and mutation comes from its owner.
-use ckmg::{Authority, Binding, Clock, Entropy, KeyHandle, Keys, SecureStore};
+mod authority;
+mod contacts;
+mod conversation;
+mod groups;
+mod handle;
+mod release;
+mod waves;
+pub use authority::ContactAuthority;
+/// The purpose of the Delivery device key.
+pub use cdlv::purpose as delivery_purpose;
+pub use cdlv::{Status as DeliveryStatus, Wire};
+pub use cgrp::{
+    Command as GroupCommand, Consent as GroupConsent, GroupView, Request as GroupRequest,
+};
+pub use ckmg::Binding;
+use ckmg::{Authority, Clock, Entropy, KeyHandle, Keys, SecureStore};
+pub use contacts::{Contacts, OwnAction, OwnDevice};
+pub use conversation::{ConversationView, Opened, Preparing};
+pub use ctcs::{DeviceAuthority, Error as ContactError, Relation, State as ContactState};
+pub use cthr::keys::{Custody, KeyPort};
+/// The purpose of the Threads device key.
+pub use cthr::purpose as threads_purpose;
+pub use cdlv::Claim;
+pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
+pub use cwvs::Error as WaveError;
+pub use groups::{GroupAction, GroupConversation, GroupPublication, PreparingGroup};
+pub use handle::HandleAnnouncement;
+pub use release::{
+    Entry as ReleaseEntry, OwnRecord, Release, Released, WalletChange, check as check_release,
+};
+pub use waves::{
+    PreparedWave, ReservationView, VerifiedWaveOutcome, VerifiedWaveReservation, WaveContext,
+    WaveOutcome, WaveState, Waves,
+};
+pub use waves::{WavesOutcomes, digest_of as member_digest_of};
 
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
@@ -9,6 +43,8 @@ pub enum Error {
     Contacts(ctcs::Error),
     Threads(cthr::Error),
     Delivery(cdlv::Error),
+    Groups(cgrp::Error),
+    Waves(cwvs::Error),
     UnexpectedMessage,
 }
 pub type Result<T> = std::result::Result<T, Error>;
@@ -20,8 +56,8 @@ pub struct View {
     threads: cthr::Threads,
     delivery: cdlv::Delivery,
 }
-pub struct Pending(cdlv::Candidate);
-pub struct Published(cdlv::Committed);
+pub struct Pending(pub(crate) cdlv::Candidate);
+pub struct Published(pub(crate) cdlv::Committed);
 /// An authenticated real MLS receive, still with no visible plaintext or ACK.
 pub enum Receive {
     Pending(Box<Receiving>),
@@ -50,6 +86,32 @@ impl Inbox {
     }
 }
 impl View {
+    /// Let a Pending relation send, retry and wrap while `claim` holds; pair it
+    /// with `ContactAuthority::with_claim`. Receiving is unaffected.
+    pub fn with_claim(mut self, claim: cdlv::Claim) -> Self {
+        self.delivery = self.delivery.with_claim(claim);
+        self
+    }
+    /// Local API projection; every field is derived from the committed owners.
+    pub fn snapshot(&self, peer: &str) -> Result<ConversationView> {
+        Ok(ConversationView {
+            relation: self.relation(peer)?,
+            history: self.history().to_vec(),
+        })
+    }
+
+    /// Reload the view after any checkpoint; retries reuse the exact durable wire.
+    pub async fn retry(
+        &self,
+        message: &[u8; 32],
+        devices: &mut impl ctcs::DeviceAuthority,
+    ) -> Result<cdlv::Wire> {
+        self.delivery
+            .retry(message, devices, &self.contacts)
+            .await
+            .map_err(Error::Delivery)
+    }
+
     pub fn relation(&self, peer: &str) -> Result<ctcs::Relation> {
         self.contacts.relation(peer).map_err(Error::Contacts)
     }

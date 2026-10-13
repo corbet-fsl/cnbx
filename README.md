@@ -18,7 +18,7 @@ All product frontends use the cmsg door.
 Inbox persists no independent domain state.
 
 **Ports.** Typed owner views and candidate publication. Current established direct
-send, receive and ACK paths compose Contacts, Threads, Delivery and Store; Waves,
+setup, send, receive, retry and ACK paths compose Contacts, Threads, Delivery and Store; Waves,
 Wallet, Groups and Records provide the remaining first-contact/group/offline ports.
 A repeated message returns Delivery's durable receipt; a repeated ACK reports the
 owner's existing acceptance without another history transition.
