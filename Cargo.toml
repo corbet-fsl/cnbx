@@ -14,7 +14,7 @@ ctcs = { git = "https://git.corbet.ch/corbet-foss/ctcs.git", branch = "main" }
 cthr = { git = "https://git.corbet.ch/corbet-foss/cthr.git", branch = "main" }
 cdlv = { git = "https://git.corbet.ch/corbet-foss/cdlv.git", branch = "main" }
 cwvs = { git = "https://git.corbet.ch/corbet-foss/cwvs.git", branch = "main" }
-cgrp = { git = "https://git.corbet.ch/corbet-foss/cgrp.git", branch = "v01" }
+cgrp = { git = "https://git.corbet.ch/corbet-foss/cgrp.git", branch = "main" }
 serde = { version = "1", features = ["derive"] }
 schemars = "1"
 sha2 = "0.11"
