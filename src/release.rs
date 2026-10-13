@@ -142,8 +142,8 @@ pub async fn check<B: Backend, D: ctcs::DeviceAuthority>(
 
 impl crate::Inbox {
     /// Build the release candidates of this member for `peer` and `conversation`.
-    /// `waves` is the accepted-reservations candidate (sender) or the recorded
-    /// own Answer (recipient). Nothing is written; dropping the result reveals
+    /// `waves` is the accepted-reservations candidate (sender) or the recorded or
+    /// claimed own Answer (recipient). Nothing is written; dropping the result reveals
     /// nothing. `contacts_handle` and `threads_handle` are this member's scoped
     /// purpose keys for Contacts and Threads.
     #[allow(clippy::too_many_arguments)]

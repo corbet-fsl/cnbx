@@ -43,6 +43,15 @@ impl Waves {
     pub fn reservations(&self) -> Vec<ReservationView> {
         self.0.reservations()
     }
+    /// True while this member's Answer for `conversation` is claimed and its proof pending.
+    pub fn claimed(
+        &self,
+        conversation: &[u8; 32],
+        peer: &[u8; 32],
+        receipt_digest: &[u8; 32],
+    ) -> bool {
+        self.0.claimed(conversation, peer, receipt_digest)
+    }
     /// Public proof contexts of a retained offer, for resuming after restart.
     pub fn offer(&self, nonce: &[u8; 32]) -> Option<(&WaveContext, &WaveContext)> {
         self.0.offer(nonce)
@@ -66,6 +75,37 @@ impl Waves {
     ) -> Result<PreparedWave> {
         self.0
             .accept_reservations(sender, recipient, clock)
+            .map(PreparedWave)
+            .map_err(Error::Waves)
+    }
+    /// The recipient's own Answer, claimed before its proof exists: the
+    /// conversation may open at once and the proof settles or reverts the claim.
+    pub fn claim_answer(
+        self,
+        nonce: &[u8; 32],
+        receipt_digest: [u8; 32],
+        clock: &mut impl Clock,
+    ) -> Result<PreparedWave> {
+        self.0
+            .claim_answer(nonce, receipt_digest, clock)
+            .map(PreparedWave)
+            .map_err(Error::Waves)
+    }
+    /// A claimed Answer whose proof failed or stayed uncertain returns to pending.
+    pub fn revert_claim(self, nonce: &[u8; 32], clock: &mut impl Clock) -> Result<PreparedWave> {
+        self.0
+            .revert_claim(nonce, clock)
+            .map(PreparedWave)
+            .map_err(Error::Waves)
+    }
+    /// The sender records the recipient's Answer after verifying its proof.
+    pub fn record_peer_answer(
+        self,
+        proof: VerifiedWaveOutcome,
+        clock: &mut impl Clock,
+    ) -> Result<PreparedWave> {
+        self.0
+            .record_peer_answer(proof, clock)
             .map(PreparedWave)
             .map_err(Error::Waves)
     }
