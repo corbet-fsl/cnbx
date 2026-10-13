@@ -13,7 +13,7 @@ cwst = { git = "https://git.corbet.ch/corbet-foss/cwst.git", branch = "v01" }
 ctcs = { git = "https://git.corbet.ch/corbet-foss/ctcs.git", branch = "v01" }
 cthr = { git = "https://git.corbet.ch/corbet-foss/cthr.git", branch = "v01" }
 cdlv = { git = "https://git.corbet.ch/corbet-foss/cdlv.git", branch = "v01" }
-cwvs = { git = "https://git.corbet.ch/corbet-foss/cwvs.git", branch = "release-authority" }
+cwvs = { git = "https://git.corbet.ch/corbet-foss/cwvs.git", branch = "v01" }
 cgrp = { git = "https://git.corbet.ch/corbet-foss/cgrp.git", branch = "v01" }
 serde = { version = "1", features = ["derive"] }
 schemars = "1"
