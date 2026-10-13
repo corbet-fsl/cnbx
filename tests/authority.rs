@@ -111,6 +111,33 @@ fn only_an_established_matching_contact_with_current_peer_lineage_is_authorized(
             Err(Error::Authority)
         );
 
+        // A matching Claim lets a Pending relation SEND and nothing else.
+        let claim = cnbx::Claim::new("bob", &CONVERSATION);
+        let mut gate = ContactAuthority::with_claim(&pending, &mut peers, &claim);
+        assert_eq!(
+            gate.authorize(&alice, "bob", &CONVERSATION, Operation::Send)
+                .await,
+            Ok(())
+        );
+        for denied in [Operation::Receive, Operation::Establish] {
+            assert_eq!(
+                gate.authorize(&alice, "bob", &CONVERSATION, denied).await,
+                Err(Error::Authority)
+            );
+        }
+        assert_eq!(
+            gate.authorize(&alice, "bob", &[6; 32], Operation::Send)
+                .await,
+            Err(Error::Authority)
+        );
+        let other_peer = cnbx::Claim::new("carol", &CONVERSATION);
+        let mut gate = ContactAuthority::with_claim(&pending, &mut peers, &other_peer);
+        assert_eq!(
+            gate.authorize(&alice, "bob", &CONVERSATION, Operation::Send)
+                .await,
+            Err(Error::Authority)
+        );
+
         let answered = apply(
             &pending,
             &mut keys,

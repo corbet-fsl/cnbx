@@ -52,6 +52,20 @@ impl Waves {
     ) -> bool {
         self.0.claimed(conversation, peer, receipt_digest)
     }
+    /// The claim that lets the recipient SEND in the Pending conversation while
+    /// its Answer is claimed. `None` unless `claimed` holds right now for exactly
+    /// this peer, conversation and receipt digest (a reverted claim yields None).
+    pub fn claim(
+        &self,
+        conversation: &[u8; 32],
+        peer: &str,
+        receipt_digest: &[u8; 32],
+    ) -> Option<cdlv::Claim> {
+        let digest = digest_of(peer).ok()?;
+        self.0
+            .claimed(conversation, &digest, receipt_digest)
+            .then(|| cdlv::Claim::new(peer, conversation))
+    }
     /// Public proof contexts of a retained offer, for resuming after restart.
     pub fn offer(&self, nonce: &[u8; 32]) -> Option<(&WaveContext, &WaveContext)> {
         self.0.offer(nonce)

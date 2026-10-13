@@ -21,6 +21,7 @@ pub use ctcs::{DeviceAuthority, Error as ContactError, Relation, State as Contac
 pub use cthr::keys::{Custody, KeyPort};
 /// The purpose of the Threads device key.
 pub use cthr::purpose as threads_purpose;
+pub use cdlv::Claim;
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
 pub use cwvs::Error as WaveError;
@@ -85,6 +86,12 @@ impl Inbox {
     }
 }
 impl View {
+    /// Let a Pending relation send, retry and wrap while `claim` holds; pair it
+    /// with `ContactAuthority::with_claim`. Receiving is unaffected.
+    pub fn with_claim(mut self, claim: cdlv::Claim) -> Self {
+        self.delivery = self.delivery.with_claim(claim);
+        self
+    }
     /// Local API projection; every field is derived from the committed owners.
     pub fn snapshot(&self, peer: &str) -> Result<ConversationView> {
         Ok(ConversationView {
