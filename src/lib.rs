@@ -7,6 +7,8 @@ mod handle;
 mod release;
 mod waves;
 pub use authority::ContactAuthority;
+/// The purpose of the Delivery device key.
+pub use cdlv::purpose as delivery_purpose;
 pub use cdlv::{Status as DeliveryStatus, Wire};
 pub use cgrp::{
     Command as GroupCommand, Consent as GroupConsent, GroupView, Request as GroupRequest,
@@ -19,8 +21,6 @@ pub use ctcs::{DeviceAuthority, Error as ContactError, Relation, State as Contac
 pub use cthr::keys::{Custody, KeyPort};
 /// The purpose of the Threads device key.
 pub use cthr::purpose as threads_purpose;
-/// The purpose of the Delivery device key.
-pub use cdlv::purpose as delivery_purpose;
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
 pub use cwvs::Error as WaveError;
