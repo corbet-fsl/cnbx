@@ -17,6 +17,8 @@ pub use contacts::{Contacts, OwnAction, OwnDevice};
 pub use conversation::{ConversationView, Opened, Preparing};
 pub use ctcs::{DeviceAuthority, Error as ContactError, Relation, State as ContactState};
 pub use cthr::keys::{Custody, KeyPort};
+/// The purpose of the Threads device key.
+pub use cthr::purpose as threads_purpose;
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
 pub use cwvs::Error as WaveError;
