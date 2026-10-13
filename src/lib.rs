@@ -19,16 +19,17 @@ pub use ctcs::{DeviceAuthority, Error as ContactError, Relation, State as Contac
 pub use cthr::keys::{Custody, KeyPort};
 pub use cthr::{DirectAuthority, Event as ConversationEvent, Message, Operation};
 use cwst::{Store, backend::Backend};
+pub use cwvs::Error as WaveError;
 pub use groups::{GroupAction, GroupConversation, GroupPublication, PreparingGroup};
 pub use handle::HandleAnnouncement;
 pub use release::{
     Entry as ReleaseEntry, OwnRecord, Release, Released, WalletChange, check as check_release,
 };
-pub use waves::WavesOutcomes;
 pub use waves::{
     PreparedWave, ReservationView, VerifiedWaveOutcome, VerifiedWaveReservation, WaveContext,
     WaveOutcome, WaveState, Waves,
 };
+pub use waves::{WavesOutcomes, digest_of as member_digest_of};
 
 #[derive(
     Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,

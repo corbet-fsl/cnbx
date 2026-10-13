@@ -138,7 +138,60 @@ impl PreparedWave {
     }
 }
 
-pub(crate) fn digest_of(member: &str) -> Result<[u8; 32]> {
+/// Contacts `Answered` as its own later checkpoint (never part of the release):
+/// accepted only with the evidence this member's Waves journal holds for exactly
+/// this conversation, peer and receipt digest.
+impl Inbox {
+    #[allow(clippy::too_many_arguments)]
+    pub async fn mark_answered<S, C, R, A, B>(
+        &self,
+        waves: &Waves,
+        peer: &str,
+        conversation: [u8; 32],
+        receipt_digest: [u8; 32],
+        keys: &mut ckmg::Keys<S, C, R, A>,
+        handle: &ckmg::KeyHandle,
+        store: &mut Store<B>,
+    ) -> Result<crate::Contacts>
+    where
+        S: ckmg::SecureStore,
+        C: Clock,
+        R: ckmg::Entropy,
+        A: ckmg::Authority,
+        B: Backend,
+    {
+        let authority = Error::Contacts(ctcs::Error::Authority);
+        let contacts =
+            ctcs::Contacts::load(self.binding.clone(), store).map_err(Error::Contacts)?;
+        let event = contacts
+            .request(
+                peer,
+                ctcs::Action::Answered {
+                    conversation,
+                    evidence: receipt_digest.to_vec(),
+                },
+            )
+            .map_err(Error::Contacts)?;
+        let certificate = handle.certificate().clone();
+        let bytes = event.signing_bytes(&certificate).map_err(Error::Contacts)?;
+        let operation = *ckmg::hash(&bytes).value();
+        let signature = keys.sign(handle, &bytes).await.map_err(|_| authority)?;
+        let signed = event.signed(certificate, signature);
+        let mut device = crate::OwnDevice(keys);
+        let mut outcomes = self.outcomes(waves);
+        let candidate = contacts
+            .prepare(signed, &mut device, &mut outcomes)
+            .await
+            .map_err(Error::Contacts)?;
+        candidate
+            .commit((&mut device, &mut outcomes), store, operation, &[], &[])
+            .await
+            .map(crate::Contacts)
+            .map_err(Error::Contacts)
+    }
+}
+
+pub fn digest_of(member: &str) -> Result<[u8; 32]> {
     use sha2::{Digest, Sha256};
     let text = member.as_bytes();
     if text.len() != 96 {
