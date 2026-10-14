@@ -1426,7 +1426,7 @@ dependencies = [
 [[package]]
 name = "cvlt"
 version = "0.0.0"
-source = "git+https://git.corbet.ch/corbet-libs/cvlt.git?branch=main#2d5b2b6270fb77c1c9f699e0e3ad2f5e03de049b"
+source = "git+https://git.corbet.ch/corbet-libs/cvlt.git?branch=main#4a1f3f567860f9b935b597ebdd5863e48fe7e023"
 dependencies = [
  "blake3",
  "cchr",
@@ -1446,7 +1446,7 @@ dependencies = [
 [[package]]
 name = "cwlt"
 version = "0.0.0"
-source = "git+https://git.corbet.ch/corbet-foss/cwlt?branch=main#eebc8e8983418b2cfdb51ef153d0a628eaf723fa"
+source = "git+https://git.corbet.ch/corbet-foss/cwlt?branch=main#1f4e4192571c20ca1daf2291f8990ae077979708"
 dependencies = [
  "czkp",
  "js-sys",
