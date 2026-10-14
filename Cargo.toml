@@ -18,12 +18,12 @@ cgrp = { git = "https://git.corbet.ch/corbet-foss/cgrp.git", branch = "main" }
 serde = { version = "1", features = ["derive"] }
 schemars = "1"
 sha2 = "0.11"
+serde_json = "1"
 
 [dev-dependencies]
 cvlt = { git = "https://git.corbet.ch/corbet-libs/cvlt.git", branch = "main" }
 futures = "0.3"
 wasm-bindgen-test = "0.3"
-serde_json = "1"
 ed25519-dalek = "3"
 blake3 = "1"
 rand_chacha = "0.10"
