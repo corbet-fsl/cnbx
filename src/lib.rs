@@ -221,6 +221,35 @@ impl Pending {
         ))
     }
 }
+impl Pending {
+    /// Commit the send together with companion changes (a queue entry that leaves
+    /// with the message) in ONE Store transaction, so a crash can neither lose
+    /// nor repeat the message.
+    pub async fn commit_with<B: Backend>(
+        self,
+        keys: &mut impl cthr::keys::Custody,
+        authority: &mut impl cthr::DirectAuthority,
+        devices: &mut impl ctcs::DeviceAuthority,
+        store: &mut Store<B>,
+        operation: [u8; 32],
+        companion: Vec<cwst::Change<'_>>,
+    ) -> Result<Published> {
+        let staged = self
+            .0
+            .stage(keys, authority, devices, store, operation)
+            .await
+            .map_err(Error::Delivery)?;
+        let version = {
+            let mut changes = staged.changes();
+            changes.extend(companion);
+            store
+                .commit(staged.expected(), operation, &changes, staged.outputs())
+                .await
+                .map_err(|_| Error::Threads(cthr::Error::Storage))?
+        };
+        Ok(Published(staged.finish(version)))
+    }
+}
 impl Published {
     pub fn outgoing_ids(&self) -> Vec<[u8; 32]> {
         self.0
