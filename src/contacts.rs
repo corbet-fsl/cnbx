@@ -106,6 +106,33 @@ impl Contacts {
         self.author(peer, action.into(), keys, handle, store).await
     }
 
+    /// Establish the contact created by a voucher admission, on this device: both
+    /// sides already consented (the issuer by issuing or signing off the link, the
+    /// newcomer by redeeming it). The conversation id is derived from the bond
+    /// secret and the two member ids, so both devices reach the same value; only
+    /// that id is stored. A peer this member blocked or closed stays so. This is
+    /// not reachable through [`OwnAction`], so a frontend cannot assert it.
+    pub async fn establish_by_voucher<S, C, R, A, B>(
+        &self,
+        own: &str,
+        peer: &str,
+        bond: &[u8; 32],
+        keys: &mut Keys<S, C, R, A>,
+        handle: &KeyHandle,
+        store: &mut Store<B>,
+    ) -> Result<Self>
+    where
+        S: SecureStore,
+        C: Clock,
+        R: Entropy,
+        A: Authority,
+        B: Backend,
+    {
+        let conversation = ctcs::voucher_conversation(bond, own, peer);
+        self.author(peer, ctcs::Action::Voucher { conversation }, keys, handle, store)
+            .await
+    }
+
     /// The newest retained lineage-record handle of `peer`.
     pub fn handle(&self, peer: &str) -> Result<Option<Vec<u8>>> {
         self.0.handle(peer).map_err(Error::Contacts)

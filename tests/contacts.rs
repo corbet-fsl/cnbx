@@ -114,3 +114,40 @@ fn block_is_signed_checkpointed_and_survives_reload() {
         );
     });
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn voucher_admission_establishes_the_contact_with_the_shared_conversation_id() {
+    block_on(async {
+        let guard = Guard::default();
+        let binding = Binding::new("alpha", "alice").unwrap();
+        let mut keys = machine(&support::Memory::default(), &Time::default(), &guard, 3);
+        create(&mut keys, &guard, &prf(3), &binding).await;
+        let handle = Contacts::key(&mut keys).await.unwrap();
+        let mut store = store(3).await;
+        let contacts = Inbox::new(binding).contacts(&store).unwrap();
+        let bond = [5u8; 32];
+        let established = contacts
+            .establish_by_voucher("alice", "bob", &bond, &mut keys, &handle, &mut store)
+            .await
+            .unwrap();
+        let relation = established.relation("bob").unwrap();
+        assert_eq!(relation.state, ContactState::Established);
+        // Bob derives the same id from his side of the same bond.
+        assert_eq!(
+            relation.conversation,
+            Some(ctcs::voucher_conversation(&bond, "bob", "alice"))
+        );
+        // A block stays a block.
+        let blocked = established
+            .apply("bob", OwnAction::Block, &mut keys, &handle, &mut store)
+            .await
+            .unwrap();
+        assert!(
+            blocked
+                .establish_by_voucher("alice", "bob", &bond, &mut keys, &handle, &mut store)
+                .await
+                .is_err()
+        );
+    });
+}
