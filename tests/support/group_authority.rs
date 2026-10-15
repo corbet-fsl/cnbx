@@ -150,13 +150,6 @@ impl Authority for TestAuthority {
             Err(Error::Authority)
         }
     }
-    fn seed(&self, community: &str, group: &Id, _: u64) -> Result<()> {
-        if community == "alpha" && *group != [255; 32] {
-            Ok(())
-        } else {
-            Err(Error::Authority)
-        }
-    }
 }
 
 pub fn request(

@@ -28,9 +28,6 @@ impl cgrp::Authority for Withdrawn {
     fn contact(&self, _: &str, _: &str, _: &str, _: u64) -> cgrp::Result<()> {
         Err(cgrp::Error::Authority)
     }
-    fn seed(&self, _: &str, _: &cgrp::Id, _: u64) -> cgrp::Result<()> {
-        Err(cgrp::Error::Authority)
-    }
 }
 
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
@@ -57,7 +54,6 @@ fn real_three_member_consent_and_atomic_publication() {
             cgrp::Command::Create {
                 id: SLOT,
                 members: group_authority::members(0, 3),
-                seed: false,
             },
             "m0",
             group_authority::members(0, 3),
