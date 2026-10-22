@@ -191,3 +191,68 @@ fn a_handle_is_retained_only_from_a_signed_announcement_under_the_peers_lineage(
         );
     });
 }
+
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test::wasm_bindgen_test)]
+#[cfg_attr(not(target_arch = "wasm32"), test)]
+fn an_announcement_verifies_on_its_own_before_any_relation_exists() {
+    block_on(async {
+        let alice = Binding::new("alpha", "alice").unwrap();
+        let bob = Binding::new("alpha", "bob").unwrap();
+        let (guard_a, guard_b) = (Guard::default(), Guard::default());
+        let mut keys_a = machine(&support::Memory::default(), &Time::default(), &guard_a, 5);
+        create(&mut keys_a, &guard_a, &prf(5), &alice).await;
+        let mut keys_b = machine(&support::Memory::default(), &Time::default(), &guard_b, 6);
+        create(&mut keys_b, &guard_b, &prf(6), &bob).await;
+        let key_b = keys_b.key(ctcs::purpose()).await.unwrap();
+        let lineage_b = keys_b.lineage().await.unwrap();
+        let lineage_a = keys_a.lineage().await.unwrap();
+
+        let announcement = HandleAnnouncement::sign(
+            &mut keys_b,
+            &key_b,
+            &bob,
+            CONVERSATION,
+            b"bob-record-v1".to_vec(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(announcement.conversation(), &CONVERSATION);
+        assert_eq!(announcement.binding(), &bob);
+        assert_eq!(announcement.handle(), b"bob-record-v1");
+
+        // Verified under bob's own current lineage, no Pending relation needed.
+        let mut bobs = Peer(Some(lineage_b), false);
+        announcement.verify(&alice, &mut bobs).await.unwrap();
+        // Missing evidence stays Unavailable; present negative evidence is Authority.
+        let mut gone = Peer(None, false);
+        assert_eq!(
+            announcement.verify(&alice, &mut gone).await.err(),
+            Some(Error::Contacts(ctcs::Error::Unavailable))
+        );
+        let mut negative = Peer(None, true);
+        assert_eq!(
+            announcement.verify(&alice, &mut negative).await.err(),
+            Some(Error::Contacts(ctcs::Error::Authority))
+        );
+        // A lineage that is not bob's cannot vouch for bob's certificate.
+        let mut impostor = Peer(Some(lineage_a), false);
+        assert_eq!(
+            announcement.verify(&alice, &mut impostor).await.err(),
+            Some(Error::Contacts(ctcs::Error::Authority))
+        );
+        // The verifier must be another member: an own announcement is refused.
+        let mut bobs = Peer(Some(keys_b.lineage().await.unwrap()), false);
+        assert_eq!(
+            announcement.verify(&bob, &mut bobs).await.err(),
+            Some(Error::Contacts(ctcs::Error::Authority))
+        );
+        // A tampered handle breaks the signature.
+        let mut forged: serde_json::Value = serde_json::to_value(&announcement).unwrap();
+        forged["handle"] = serde_json::json!(b"attacker-record".to_vec());
+        let forged: HandleAnnouncement = serde_json::from_value(forged).unwrap();
+        assert_eq!(
+            forged.verify(&alice, &mut bobs).await.err(),
+            Some(Error::Contacts(ctcs::Error::Authority))
+        );
+    });
+}

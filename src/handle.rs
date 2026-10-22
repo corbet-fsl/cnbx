@@ -84,11 +84,16 @@ impl HandleAnnouncement {
         &self.binding
     }
 
+    /// The conversation this announcement is bound to.
+    pub fn conversation(&self) -> &[u8; 32] {
+        &self.conversation
+    }
+
     /// Verify under the announcer's CURRENT lineage from `authority`. The caller
     /// builds `authority` from the previously retained handle when one exists,
     /// otherwise from the announced one. Evidence that is unavailable stays
     /// `Unavailable`; present and wrong evidence is `Authority`.
-    async fn verify(
+    pub async fn verify(
         &self,
         own: &Binding,
         authority: &mut impl ctcs::DeviceAuthority,
