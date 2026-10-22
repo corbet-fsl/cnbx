@@ -118,6 +118,10 @@ impl View {
     pub fn history(&self) -> &[cthr::Message] {
         self.threads.history()
     }
+    /// Own sends that still wait for the recipient's receipt, oldest first.
+    pub fn pending(&self) -> &[cthr::Message] {
+        self.threads.pending()
+    }
     pub fn delivery_status(&self, message: &[u8; 32]) -> Option<cdlv::Status> {
         self.delivery.status(message)
     }

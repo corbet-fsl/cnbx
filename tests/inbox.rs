@@ -318,6 +318,11 @@ fn established_message_uses_real_owners_through_the_facade() {
         let id = sent.outgoing_ids()[0];
         assert_eq!(sent.delivery_status(&id), Some(Status::Pending));
         assert!(sent.history().is_empty());
+        let waiting = ai.view(SLOT, &astore).unwrap();
+        assert!(waiting.history().is_empty());
+        assert_eq!(waiting.pending().len(), 1);
+        assert_eq!(waiting.pending()[0].id, id);
+        assert_eq!(waiting.pending()[0].bytes, b"facade hello");
         assert!(sent.receipt(&id).is_err());
         let wire = sent
             .outgoing(&mut a.keys, &ah, &mut directory, &mut astore, [4; 32])
@@ -410,6 +415,7 @@ fn established_message_uses_real_owners_through_the_facade() {
             .unwrap();
         assert_eq!(accepted.delivery_status(&id), Some(Status::Accepted));
         assert_eq!(accepted.history()[0].bytes, b"facade hello");
+        assert!(ai.view(SLOT, &astore).unwrap().pending().is_empty());
         match bi
             .view(SLOT, &bstore)
             .unwrap()
