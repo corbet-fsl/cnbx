@@ -180,6 +180,7 @@ pub fn request(
             key_package: vec![],
             signature: vec![],
             authority: vec![],
+            lineage_handle: vec![],
         };
         c.signature = signer(&c.member)
             .sign(&c.signing_bytes().unwrap())
