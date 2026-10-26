@@ -93,10 +93,12 @@ impl Preparing {
         let welcome = staged
             .outputs()
             .iter()
-            .find_map(|output| match serde_json::from_slice::<cthr::Event>(&output.bytes) {
-                Ok(cthr::Event::Invitation { welcome, .. }) => Some(welcome),
-                _ => None,
-            })
+            .find_map(
+                |output| match serde_json::from_slice::<cthr::Event>(&output.bytes) {
+                    Ok(cthr::Event::Invitation { welcome, .. }) => Some(welcome),
+                    _ => None,
+                },
+            )
             .ok_or(Error::Threads(cthr::Error::State))?;
         let version = {
             let mut changes = staged.changes();

@@ -129,8 +129,14 @@ impl Contacts {
         B: Backend,
     {
         let conversation = ctcs::voucher_conversation(bond, own, peer);
-        self.author(peer, ctcs::Action::Voucher { conversation }, keys, handle, store)
-            .await
+        self.author(
+            peer,
+            ctcs::Action::Voucher { conversation },
+            keys,
+            handle,
+            store,
+        )
+        .await
     }
 
     /// The newest retained lineage-record handle of `peer`.
