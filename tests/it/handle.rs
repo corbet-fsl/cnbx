@@ -1,12 +1,11 @@
 //! Peer lineage-record handles: retained only from a verified signed announcement.
 //! Test issuers are not production G3 authority.
-mod support;
+use crate::support::{Guard, Time, create, machine, prf};
 use ckmg::{Binding, Lineage};
 use cnbx::{Error, HandleAnnouncement};
 use ctcs::{Action, DeviceAuthority, OutcomeAuthority};
 use cwst::{Store, backend::Memory};
 use futures::executor::block_on;
-use support::{Guard, Time, create, machine, prf};
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
@@ -48,9 +47,19 @@ fn a_handle_is_retained_only_from_a_signed_announcement_under_the_peers_lineage(
         let alice = Binding::new("alpha", "alice").unwrap();
         let bob = Binding::new("alpha", "bob").unwrap();
         let (guard_a, guard_b) = (Guard::default(), Guard::default());
-        let mut keys_a = machine(&support::Memory::default(), &Time::default(), &guard_a, 5);
+        let mut keys_a = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard_a,
+            5,
+        );
         create(&mut keys_a, &guard_a, &prf(5), &alice).await;
-        let mut keys_b = machine(&support::Memory::default(), &Time::default(), &guard_b, 6);
+        let mut keys_b = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard_b,
+            6,
+        );
         create(&mut keys_b, &guard_b, &prf(6), &bob).await;
         let key_a = keys_a.key(ctcs::purpose()).await.unwrap();
         let key_b = keys_b.key(ctcs::purpose()).await.unwrap();
@@ -199,9 +208,19 @@ fn an_announcement_verifies_on_its_own_before_any_relation_exists() {
         let alice = Binding::new("alpha", "alice").unwrap();
         let bob = Binding::new("alpha", "bob").unwrap();
         let (guard_a, guard_b) = (Guard::default(), Guard::default());
-        let mut keys_a = machine(&support::Memory::default(), &Time::default(), &guard_a, 5);
+        let mut keys_a = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard_a,
+            5,
+        );
         create(&mut keys_a, &guard_a, &prf(5), &alice).await;
-        let mut keys_b = machine(&support::Memory::default(), &Time::default(), &guard_b, 6);
+        let mut keys_b = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard_b,
+            6,
+        );
         create(&mut keys_b, &guard_b, &prf(6), &bob).await;
         let key_b = keys_b.key(ctcs::purpose()).await.unwrap();
         let lineage_b = keys_b.lineage().await.unwrap();

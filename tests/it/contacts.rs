@@ -1,11 +1,10 @@
 //! Own-authority Contacts vectors with real scoped Keys. Test issuers are not
 //! production G3 authority.
-mod support;
+use crate::support::{Guard, Time, create, machine, prf};
 use ckmg::Binding;
 use cnbx::{ContactState, Contacts, Error, Inbox, OwnAction};
 use cwst::{Store, backend::Memory};
 use futures::executor::block_on;
-use support::{Guard, Time, create, machine, prf};
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
@@ -22,7 +21,12 @@ fn block_is_signed_checkpointed_and_survives_reload() {
     block_on(async {
         let guard = Guard::default();
         let binding = Binding::new("alpha", "alice").unwrap();
-        let mut keys = machine(&support::Memory::default(), &Time::default(), &guard, 3);
+        let mut keys = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard,
+            3,
+        );
         create(&mut keys, &guard, &prf(3), &binding).await;
         let handle = Contacts::key(&mut keys).await.unwrap();
         let mut store = store(3).await;
@@ -121,7 +125,12 @@ fn voucher_admission_establishes_the_contact_with_the_shared_conversation_id() {
     block_on(async {
         let guard = Guard::default();
         let binding = Binding::new("alpha", "alice").unwrap();
-        let mut keys = machine(&support::Memory::default(), &Time::default(), &guard, 3);
+        let mut keys = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard,
+            3,
+        );
         create(&mut keys, &guard, &prf(3), &binding).await;
         let handle = Contacts::key(&mut keys).await.unwrap();
         let mut store = store(3).await;

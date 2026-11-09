@@ -22,7 +22,8 @@ impl ckmg::Authority for ExpiringAuthority {
         ckmg::Authority::check(&mut self.guard, request).await
     }
 }
-type TestVault = cvlt::Vault<Memory, Time, support::Random, ExpiringAuthority, NoRecords, ()>;
+type TestVault =
+    cvlt::Vault<Memory, Time, crate::support::Random, ExpiringAuthority, NoRecords, ()>;
 struct Member {
     vault: TestVault,
     backend: Memory,
@@ -55,7 +56,7 @@ impl Member {
             store,
             "alpha",
             clock.clone(),
-            support::Random::new(seed),
+            crate::support::Random::new(seed),
             ExpiringAuthority {
                 guard: guard.clone(),
                 clock: clock.clone(),
@@ -70,8 +71,8 @@ impl Member {
             .create_scope(
                 &prf(seed),
                 binding.clone(),
-                support::info(),
-                &support::consent(ckmg::Action::Create, &binding, None, 0, None, None),
+                crate::support::info(),
+                &crate::support::consent(ckmg::Action::Create, &binding, None, 0, None, None),
             )
             .await
             .unwrap();
@@ -99,8 +100,14 @@ impl Member {
     }
     fn port(
         &mut self,
-    ) -> KeyPort<'_, cvlt::KeyStore<Memory>, Time, support::Random, ExpiringAuthority, Directory>
-    {
+    ) -> KeyPort<
+        '_,
+        cvlt::KeyStore<Memory>,
+        Time,
+        crate::support::Random,
+        ExpiringAuthority,
+        Directory,
+    > {
         KeyPort {
             keys: self.vault.keys(),
             handle: &self.handle,

@@ -2,13 +2,12 @@
 //! sender and recipient releases need Wallet's verified reservations and
 //! outcomes (not constructible without real proofs); every refusal below must
 //! write nothing.
-mod support;
+use crate::support::{Guard, Time, create, machine, prf};
 use ckmg::Binding;
 use cnbx::{Error, Inbox, OwnAction, OwnDevice, OwnRecord, WaveContext, check_release};
 use cwst::{Store, backend::Memory};
 use futures::executor::block_on;
 use sha2::{Digest, Sha256};
-use support::{Guard, Time, create, machine, prf};
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
@@ -70,13 +69,18 @@ fn refused_releases_write_nothing() {
         let bob = Binding::new("alpha", "bob").unwrap();
         let (alice_guard, bob_guard) = (Guard::default(), Guard::default());
         let mut alice_keys = machine(
-            &support::Memory::default(),
+            &crate::support::Memory::default(),
             &Time::default(),
             &alice_guard,
             3,
         );
         create(&mut alice_keys, &alice_guard, &prf(3), &alice).await;
-        let mut bob_keys = machine(&support::Memory::default(), &Time::default(), &bob_guard, 4);
+        let mut bob_keys = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &bob_guard,
+            4,
+        );
         create(&mut bob_keys, &bob_guard, &prf(4), &bob).await;
         let cipher = ckmg::passkey::store_cipher(&prf(3), "alpha").unwrap();
         let mut store = Store::create(Memory::new(), &cipher, "alpha")

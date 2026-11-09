@@ -1,6 +1,6 @@
 //! The production direct authority against real Contacts journals. Test issuers
 //! are not production G3 or Waves accounting.
-mod support;
+use crate::support::{Guard, Time, create, machine, prf};
 use ckmg::{Binding, Lineage};
 use cnbx::ContactAuthority;
 use ctcs::{Action, Contacts, DeviceAuthority, OutcomeAuthority};
@@ -8,7 +8,6 @@ use cthr::{DirectAuthority, Error, Operation};
 use cwst::{Store, backend::Memory};
 use futures::executor::block_on;
 use std::collections::BTreeMap;
-use support::{Guard, Time, create, machine, prf};
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
@@ -40,7 +39,7 @@ impl OutcomeAuthority for Answers {
 
 async fn apply(
     contacts: &Contacts,
-    keys: &mut support::Machine,
+    keys: &mut crate::support::Machine,
     handle: &ckmg::KeyHandle,
     store: &mut Store<Memory>,
     action: Action,
@@ -70,7 +69,12 @@ fn only_an_established_matching_contact_with_current_peer_lineage_is_authorized(
     block_on(async {
         let guard = Guard::default();
         let alice = Binding::new("alpha", "alice").unwrap();
-        let mut keys = machine(&support::Memory::default(), &Time::default(), &guard, 5);
+        let mut keys = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard,
+            5,
+        );
         create(&mut keys, &guard, &prf(5), &alice).await;
         let handle = keys.key(ctcs::purpose()).await.unwrap();
         let cipher = ckmg::passkey::store_cipher(&prf(5), "alpha").unwrap();
@@ -80,7 +84,12 @@ fn only_an_established_matching_contact_with_current_peer_lineage_is_authorized(
         let bob_lineage = {
             let guard = Guard::default();
             let binding = Binding::new("alpha", "bob").unwrap();
-            let mut bob = machine(&support::Memory::default(), &Time::default(), &guard, 6);
+            let mut bob = machine(
+                &crate::support::Memory::default(),
+                &Time::default(),
+                &guard,
+                6,
+            );
             create(&mut bob, &guard, &prf(6), &binding).await;
             bob.lineage().await.unwrap()
         };

@@ -7,7 +7,7 @@ mod group_authority;
 mod group_consent;
 #[path = "support/shared_vault.rs"]
 mod shared_vault;
-mod support;
+use crate::support::{Guard, Machine, Time, create, machine, prf};
 use cdlv::Status;
 use ckmg::{Binding, KeyHandle, Lineage};
 use cnbx::Inbox;
@@ -17,7 +17,6 @@ use cwst::{Store, backend::Memory};
 use ed25519_dalek::{Signer, SigningKey};
 use futures::executor::block_on;
 use std::{cell::RefCell, collections::BTreeMap, rc::Rc};
-use support::{Guard, Machine, Time, create, machine, prf};
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 const SLOT: [u8; 32] = [17; 32];
@@ -93,7 +92,12 @@ impl Fixture {
     async fn new(member: &str, seed: u8, directory: Directory) -> Self {
         let guard = Guard::default();
         let binding = Binding::new("alpha", member).unwrap();
-        let mut keys = machine(&support::Memory::default(), &Time::default(), &guard, seed);
+        let mut keys = machine(
+            &crate::support::Memory::default(),
+            &Time::default(),
+            &guard,
+            seed,
+        );
         create(&mut keys, &guard, &prf(seed), &binding).await;
         let handle = keys.key(cthr::purpose()).await.unwrap();
         directory
@@ -108,7 +112,9 @@ impl Fixture {
             seed,
         }
     }
-    fn port(&mut self) -> KeyPort<'_, support::Memory, Time, support::Random, Guard, Directory> {
+    fn port(
+        &mut self,
+    ) -> KeyPort<'_, crate::support::Memory, Time, crate::support::Random, Guard, Directory> {
         KeyPort {
             keys: &mut self.keys,
             handle: &self.handle,

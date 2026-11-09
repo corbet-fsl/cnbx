@@ -1,12 +1,11 @@
 //! Waves journal through the facade. Positive proof transitions need Wallet's
 //! real extension capabilities and are covered by the owner's own vectors.
-mod support;
+use crate::support::{Time, prf};
 use ckmg::Binding;
 use cnbx::{Error, Inbox, WaveContext, WaveState};
 use cwst::{Store, backend::Memory};
 use futures::executor::block_on;
 use sha2::{Digest, Sha256};
-use support::{Time, prf};
 #[cfg(target_arch = "wasm32")]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
