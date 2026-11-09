@@ -47,7 +47,7 @@ CNBX_LAST_GATE="wasm-runner-version"
 version=$(jq -r '.packages[] | select(.name == "wasm-bindgen") | .version' dependency-metadata.json)
 test -n "$version" || { echo 'could not resolve wasm-bindgen version from dependency-metadata.json' >&2; exit 2; }
 archive="wasm-bindgen-${version}-x86_64-unknown-linux-musl.tar.gz"
-base="https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${version}"
+base="${WASM_BINDGEN_DOWNLOAD_BASE:-https://github.com/wasm-bindgen/wasm-bindgen/releases/download}/${version}"
 mkdir -p "$RUNNER_TEMP/wasm-runner"
 cd "$RUNNER_TEMP/wasm-runner"
 CNBX_LAST_GATE="wasm-runner-fetch"
