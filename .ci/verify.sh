@@ -22,7 +22,6 @@ clang --version
 CNBX_LAST_GATE="resolve-first-party"
 python3 .github/check-first-party.py
 CNBX_LAST_GATE="resolve-metadata"
-bash .ci/update-our-crates.sh
 cargo metadata --locked --format-version 1 > dependency-metadata.json
 
 # --- dependency-policy first-party (deny advisories separate always-run) ---
